@@ -318,6 +318,18 @@
                                 <div class="translation-card translated-text">
                                     <div class="text-content" id="translatedTextContent"></div>
                                 </div>
+
+                                <!-- Indicadores de estado -->
+                                <div class="translation-indicator hidden" id="translationIndicator">
+                                    <i class="fas fa-language"></i>
+                                    <span>Traduciendo con LibreTranslate...</span>
+                                </div>
+                            </div>
+
+                            <!-- Estado de clonación de voz -->
+                            <div class="voice-clone-status" id="voiceCloneStatus">
+                                <i class="fas fa-microphone"></i>
+                                <span>Generando voz clonada...</span>
                             </div>
                         </div>
                     </div>
@@ -644,6 +656,12 @@
                 <span id="loadingText">Cargando...</span>
             </div>
         </div>
+    </div>
+
+    <!-- Indicador de estado de API -->
+    <div class="api-status-indicator" id="apiStatusIndicator">
+        <i class="fas fa-circle"></i>
+        <span id="apiStatusText">API Status</span>
     </div>
 
     <script src="script.js"></script>

@@ -662,10 +662,18 @@ class EZTranslateApp {
             return text;
         }
         
-        // Simulate API delay
-        await this.delay(300);
+        try {
+            // Usar LibreTranslate API para traducción real
+            const response = await this.callLibreTranslateAPI(text, fromLang, toLang);
+            if (response && response.translatedText) {
+                return response.translatedText;
+            }
+        } catch (error) {
+            console.error('Error con LibreTranslate API:', error);
+            // Fallback a traducción local en caso de error
+        }
         
-        // Enhanced mock translation dictionary
+        // Fallback mejorado con más traducciones
         const translations = {
             'es-en': {
                 'hola': 'hello',
@@ -687,7 +695,14 @@ class EZTranslateApp {
                 'donde esta': 'where is',
                 'que hora es': 'what time is it',
                 'te amo': 'i love you',
-                'buen trabajo': 'good job'
+                'buen trabajo': 'good job',
+                'necesito ayuda': 'i need help',
+                'donde vives': 'where do you live',
+                'que edad tienes': 'how old are you',
+                'me gusta': 'i like it',
+                'no entiendo': 'i don\'t understand',
+                'habla mas despacio': 'speak more slowly',
+                'repite por favor': 'please repeat'
             },
             'en-es': {
                 'hello': 'hola',
@@ -711,31 +726,47 @@ class EZTranslateApp {
                 'good job': 'buen trabajo',
                 'that sounds great': 'eso suena genial',
                 'i understand perfectly': 'entiendo perfectamente',
-                'thanks for the message': 'gracias por el mensaje'
+                'thanks for the message': 'gracias por el mensaje',
+                'i need help': 'necesito ayuda',
+                'where do you live': 'donde vives',
+                'how old are you': 'que edad tienes',
+                'i like it': 'me gusta',
+                'i don\'t understand': 'no entiendo',
+                'speak more slowly': 'habla mas despacio',
+                'please repeat': 'repite por favor'
             },
             'es-fr': {
                 'hola': 'bonjour',
                 'gracias': 'merci',
                 'adios': 'au revoir',
-                'por favor': 's\'il vous plaît'
+                'por favor': 's\'il vous plaît',
+                'buenos dias': 'bonjour',
+                'buenas noches': 'bonne nuit',
+                'no entiendo': 'je ne comprends pas'
             },
             'fr-es': {
                 'bonjour': 'hola',
                 'merci': 'gracias',
                 'au revoir': 'adios',
-                's\'il vous plaît': 'por favor'
+                's\'il vous plaît': 'por favor',
+                'bonne nuit': 'buenas noches',
+                'je ne comprends pas': 'no entiendo'
             },
             'en-fr': {
                 'hello': 'bonjour',
                 'thanks': 'merci',
                 'goodbye': 'au revoir',
-                'please': 's\'il vous plaît'
+                'please': 's\'il vous plaît',
+                'good night': 'bonne nuit',
+                'i don\'t understand': 'je ne comprends pas'
             },
             'fr-en': {
                 'bonjour': 'hello',
                 'merci': 'thanks',
                 'au revoir': 'goodbye',
-                's\'il vous plaît': 'please'
+                's\'il vous plaît': 'please',
+                'bonne nuit': 'good night',
+                'je ne comprends pas': 'i don\'t understand'
             }
         };
         
@@ -773,6 +804,60 @@ class EZTranslateApp {
         };
         
         return `[${languageNames[toLang] || toLang.toUpperCase()}] ${text}`;
+    }
+
+    // Nueva función para llamar a LibreTranslate API
+    async callLibreTranslateAPI(text, fromLang, toLang) {
+        try {
+            // Mapear códigos de idioma para LibreTranslate
+            const langMap = {
+                'es': 'es',
+                'en': 'en',
+                'fr': 'fr',
+                'de': 'de',
+                'it': 'it',
+                'pt': 'pt',
+                'zh': 'zh',
+                'ja': 'ja',
+                'ko': 'ko',
+                'ar': 'ar',
+                'ru': 'ru',
+                'hi': 'hi'
+            };
+
+            const sourceLang = langMap[fromLang] || fromLang.split('-')[0];
+            const targetLang = langMap[toLang] || toLang.split('-')[0];
+
+            // Usar API pública de LibreTranslate (puedes cambiar la URL)
+            const apiUrl = 'https://libretranslate.de/translate';
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    q: text,
+                    source: sourceLang,
+                    target: targetLang,
+                    format: 'text'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return {
+                translatedText: data.translatedText,
+                sourceLanguage: sourceLang,
+                targetLanguage: targetLang
+            };
+        } catch (error) {
+            console.error('Error en LibreTranslate API:', error);
+            throw error;
+        }
     }
     
     // ============ NEW CHAT FUNCTIONS ============
@@ -1100,8 +1185,15 @@ class EZTranslateApp {
     
     async startVoiceRecording() {
         try {
-            // Check for microphone permission first
-            await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Check for microphone permission and start recording
+            this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    sampleRate: 44100,
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }
+            });
             
             this.isVoiceRecording = true;
             this.updateRecordingUI(true);
@@ -1109,6 +1201,9 @@ class EZTranslateApp {
             // Clear previous content
             document.getElementById('originalTextContent').textContent = '';
             document.getElementById('translatedTextContent').textContent = '';
+            
+            // Start audio recording for voice cloning
+            await this.startAudioRecording();
             
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -1149,23 +1244,27 @@ class EZTranslateApp {
                         const displayText = finalTranscript + interimTranscript;
                         originalTextEl.textContent = displayText.trim();
                         
-                        // Auto-translate in real time
+                        // Auto-translate in real time with LibreTranslate
                         if (displayText.trim()) {
                             const fromLang = document.getElementById('voiceFromLanguage').value.split('-')[0];
                             const toLang = document.getElementById('voiceToLanguage').value.split('-')[0];
                             
                             try {
+                                // Mostrar indicador de traducción
+                                translatedTextEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traduciendo...';
+                                
                                 const translation = await this.translateText(displayText.trim(), fromLang, toLang);
                                 translatedTextEl.textContent = translation;
                                 
-                                // Speak translation automatically for final text
+                                // Speak translation automatically for final text with cloned voice
                                 if (finalTranscript.trim()) {
                                     setTimeout(() => {
-                                        this.speakText(translation, document.getElementById('voiceToLanguage').value);
+                                        this.speakText(translation, document.getElementById('voiceToLanguage').value, true);
                                     }, 200);
                                 }
                             } catch (error) {
                                 translatedTextEl.textContent = 'Error en la traducción';
+                                console.error('Translation error:', error);
                             }
                         }
                     }
@@ -1219,6 +1318,51 @@ class EZTranslateApp {
             this.stopVoiceRecording();
         }
     }
+
+    async startAudioRecording() {
+        try {
+            // Initialize MediaRecorder para capturar audio para clonación de voz
+            if (this.mediaStream) {
+                this.mediaRecorder = new MediaRecorder(this.mediaStream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+                
+                this.audioChunks = [];
+                
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        this.audioChunks.push(event.data);
+                    }
+                };
+                
+                this.mediaRecorder.onstop = () => {
+                    // Crear blob de audio para muestra de voz
+                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                    this.processVoiceSample(audioBlob);
+                };
+                
+                // Comenzar grabación de audio
+                this.mediaRecorder.start(1000); // Capturar datos cada segundo
+                console.log('Audio recording started for voice cloning');
+            }
+        } catch (error) {
+            console.error('Error starting audio recording:', error);
+        }
+    }
+
+    async processVoiceSample(audioBlob) {
+        try {
+            // Convertir a base64 para enviar a API de clonación
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                this.userVoiceSample = reader.result.split(',')[1]; // Remover prefijo data:
+                console.log('Voice sample processed for cloning');
+            };
+            reader.readAsDataURL(audioBlob);
+        } catch (error) {
+            console.error('Error processing voice sample:', error);
+        }
+    }
     
     stopVoiceRecording() {
         this.isVoiceRecording = false;
@@ -1227,6 +1371,17 @@ class EZTranslateApp {
         if (this.speechRecognition) {
             this.speechRecognition.stop();
             this.speechRecognition = null;
+        }
+        
+        // Detener grabación de audio
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+        }
+        
+        // Cerrar stream de media
+        if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStream = null;
         }
     }
     
@@ -1289,8 +1444,26 @@ class EZTranslateApp {
         }
     }
     
-    async speakText(text, lang) {
-        if (!text || !('speechSynthesis' in window)) return;
+    async speakText(text, lang, useClonedVoice = true) {
+        if (!text) return;
+        
+        try {
+            if (useClonedVoice && this.userVoiceSample) {
+                // Usar síntesis de voz clonada con Bark/Tortoise TTS
+                await this.generateClonedVoice(text, lang);
+            } else {
+                // Fallback a síntesis nativa del navegador
+                await this.speakWithBrowserTTS(text, lang);
+            }
+        } catch (error) {
+            console.error('Error en síntesis de voz:', error);
+            // Fallback a TTS nativo
+            await this.speakWithBrowserTTS(text, lang);
+        }
+    }
+
+    async speakWithBrowserTTS(text, lang) {
+        if (!('speechSynthesis' in window)) return;
         
         try {
             // Cancel any ongoing speech
@@ -1315,7 +1488,87 @@ class EZTranslateApp {
             
             speechSynthesis.speak(utterance);
         } catch (error) {
-            console.error('Speech synthesis error:', error);
+            console.error('Browser TTS error:', error);
+        }
+    }
+
+    // Nueva función para síntesis de voz clonada
+    async generateClonedVoice(text, lang) {
+        try {
+            // Aquí integrarías con Bark o Tortoise TTS API
+            // Por ahora simularemos la llamada
+            console.log('Generando voz clonada para:', text);
+            
+            // Simular delay de generación
+            await this.delay(1000);
+            
+            // En una implementación real, enviarías:
+            // - El texto a sintetizar
+            // - La muestra de voz del usuario (this.userVoiceSample)
+            // - El idioma objetivo
+            // Y recibirías un archivo de audio para reproducir
+            
+            const audioData = await this.callVoiceCloningAPI(text, lang, this.userVoiceSample);
+            if (audioData) {
+                await this.playGeneratedAudio(audioData);
+            } else {
+                // Fallback a TTS nativo
+                await this.speakWithBrowserTTS(text, lang);
+            }
+        } catch (error) {
+            console.error('Error en clonación de voz:', error);
+            // Fallback a TTS nativo
+            await this.speakWithBrowserTTS(text, lang);
+        }
+    }
+
+    async callVoiceCloningAPI(text, lang, voiceSample) {
+        try {
+            // Aquí integrarías con Bark o Tortoise TTS
+            // Ejemplo de estructura para la API:
+            /*
+            const response = await fetch('https://api.bark-tts.com/synthesize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer YOUR_API_KEY'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    language: lang,
+                    voice_sample: voiceSample, // Base64 audio sample
+                    model: 'bark-v1' // o 'tortoise-tts'
+                })
+            });
+
+            const audioBlob = await response.blob();
+            return audioBlob;
+            */
+            
+            // Por ahora retornamos null para usar fallback
+            console.log('Llamada simulada a API de clonación de voz');
+            return null;
+        } catch (error) {
+            console.error('Error en API de clonación:', error);
+            return null;
+        }
+    }
+
+    async playGeneratedAudio(audioBlob) {
+        try {
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            
+            return new Promise((resolve, reject) => {
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                };
+                audio.onerror = reject;
+                audio.play();
+            });
+        } catch (error) {
+            console.error('Error reproduciendo audio generado:', error);
         }
     }
     
