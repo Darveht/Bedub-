@@ -339,7 +339,22 @@ class EZTranslateApp {
     
     renderChatList() {
         const chatList = document.getElementById('chatList');
+        const noChat = document.querySelector('.no-chat-selected');
+        const chatMain = document.querySelector('.chat-main');
+        
         chatList.innerHTML = '';
+        
+        // If we have contacts, hide the placeholder
+        if (this.contacts.size > 0) {
+            if (noChat) noChat.style.display = 'none';
+            chatMain.classList.remove('show-placeholder');
+        } else {
+            // Show placeholder only if no active chat
+            if (!this.currentChat) {
+                if (noChat) noChat.style.display = 'block';
+                chatMain.classList.add('show-placeholder');
+            }
+        }
         
         this.contacts.forEach((contact, phone) => {
             const messages = this.messages.get(phone) || [];
@@ -376,13 +391,20 @@ class EZTranslateApp {
         // Update UI for fullscreen chat
         const chatMain = document.querySelector('.chat-main');
         const chatSidebar = document.querySelector('.chat-sidebar');
+        const noChat = document.querySelector('.no-chat-selected');
+        const activeChat = document.getElementById('activeChat');
         
+        // Hide sidebar and show chat
+        chatSidebar.classList.add('chat-open');
         chatMain.classList.remove('show-placeholder');
         chatMain.classList.add('active');
-        chatSidebar.classList.add('chat-open');
         
-        document.querySelector('.no-chat-selected').classList.add('hidden');
-        document.getElementById('activeChat').classList.remove('hidden');
+        // Hide placeholder and show active chat
+        if (noChat) noChat.style.display = 'none';
+        if (activeChat) {
+            activeChat.classList.remove('hidden');
+            activeChat.style.display = 'flex';
+        }
         
         // Update chat header
         document.getElementById('contactName').textContent = contact.name;
@@ -795,13 +817,27 @@ class EZTranslateApp {
     goBackToChats() {
         const chatMain = document.querySelector('.chat-main');
         const chatSidebar = document.querySelector('.chat-sidebar');
+        const noChat = document.querySelector('.no-chat-selected');
+        const activeChat = document.getElementById('activeChat');
         
-        chatMain.classList.remove('active');
-        chatMain.classList.add('show-placeholder');
+        // Show sidebar and hide active chat
         chatSidebar.classList.remove('chat-open');
+        chatMain.classList.remove('active');
         
-        document.getElementById('activeChat').classList.add('hidden');
-        document.querySelector('.no-chat-selected').classList.remove('hidden');
+        // Hide active chat and show appropriate placeholder
+        if (activeChat) {
+            activeChat.classList.add('hidden');
+            activeChat.style.display = 'none';
+        }
+        
+        // Show placeholder only if no contacts exist
+        if (this.contacts.size === 0) {
+            chatMain.classList.add('show-placeholder');
+            if (noChat) noChat.style.display = 'block';
+        } else {
+            chatMain.classList.remove('show-placeholder');
+            if (noChat) noChat.style.display = 'none';
+        }
         
         this.currentChat = null;
     }
