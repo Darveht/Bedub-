@@ -170,7 +170,7 @@
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
-                            
+
                             <div class="search-container">
                                 <input type="text" placeholder="Buscar contactos..." class="search-input">
                                 <i class="fas fa-search search-icon"></i>
@@ -249,57 +249,49 @@
                 <div class="section-container hidden" id="translatorSection">
                     <div class="voice-translator-layout">
                         <div class="voice-translator-content">
-                            <!-- Language Selection -->
+                            <!-- Language Selector -->
                             <div class="voice-language-selector">
-                                <div class="language-card from-language">
-                                    <div class="language-label">Hablas en</div>
+                                <div class="language-card">
+                                    <div class="language-label">Desde</div>
                                     <div class="custom-select">
                                         <select id="voiceFromLanguage" class="voice-language-select">
-                                            <option value="es-ES">🇪🇸 Español</option>
-                                            <option value="en-US">🇺🇸 English</option>
-                                            <option value="fr-FR">🇫🇷 Français</option>
-                                            <option value="de-DE">🇩🇪 Deutsch</option>
-                                            <option value="it-IT">🇮🇹 Italiano</option>
-                                            <option value="pt-BR">🇧🇷 Português</option>
-                                            <option value="zh-CN">🇨🇳 中文</option>
-                                            <option value="ja-JP">🇯🇵 日本語</option>
-                                            <option value="ko-KR">🇰🇷 한국어</option>
-                                            <option value="ar-SA">🇸🇦 العربية</option>
-                                            <option value="ru-RU">🇷🇺 Русский</option>
-                                            <option value="hi-IN">🇮🇳 हिन्दी</option>
+                                            <option value="es-ES">Español</option>
+                                            <option value="en-US">English</option>
+                                            <option value="fr-FR">Français</option>
+                                            <option value="de-DE">Deutsch</option>
+                                            <option value="it-IT">Italiano</option>
+                                            <option value="pt-BR">Português</option>
+                                            <option value="zh-CN">中文</option>
+                                            <option value="ja-JP">日本語</option>
+                                            <option value="ko-KR">한국어</option>
+                                            <option value="ar-SA">العربية</option>
+                                            <option value="ru-RU">Русский</option>
+                                            <option value="hi-IN">हिन्दी</option>
                                         </select>
-                                        <div class="select-arrow">
-                                            <i class="fas fa-chevron-down"></i>
-                                        </div>
+                                        <i class="fas fa-chevron-down select-arrow"></i>
                                     </div>
                                 </div>
-
-                                <button class="voice-swap-btn" onclick="swapVoiceLanguages()" title="Intercambiar idiomas">
-                                    <div class="swap-icon">
-                                        <i class="fas fa-exchange-alt"></i>
-                                    </div>
+                                <button class="voice-swap-btn" onclick="swapVoiceLanguages()">
+                                    <span class="swap-icon">⇄</span>
                                 </button>
-
-                                <div class="language-card to-language">
-                                    <div class="language-label">Escuchas en</div>
+                                <div class="language-card">
+                                    <div class="language-label">Hacia</div>
                                     <div class="custom-select">
                                         <select id="voiceToLanguage" class="voice-language-select">
-                                            <option value="en-US">🇺🇸 English</option>
-                                            <option value="es-ES">🇪🇸 Español</option>
-                                            <option value="fr-FR">🇫🇷 Français</option>
-                                            <option value="de-DE">🇩🇪 Deutsch</option>
-                                            <option value="it-IT">🇮🇹 Italiano</option>
-                                            <option value="pt-BR">🇧🇷 Português</option>
-                                            <option value="zh-CN">🇨🇳 中文</option>
-                                            <option value="ja-JP">🇯🇵 日本語</option>
-                                            <option value="ko-KR">🇰🇷 한국어</option>
-                                            <option value="ar-SA">🇸🇦 العربية</option>
-                                            <option value="ru-RU">🇷🇺 Русский</option>
-                                            <option value="hi-IN">🇮🇳 हिन्दी</option>
+                                            <option value="en-US">English</option>
+                                            <option value="es-ES">Español</option>
+                                            <option value="fr-FR">Français</option>
+                                            <option value="de-DE">Deutsch</option>
+                                            <option value="it-IT">Italiano</option>
+                                            <option value="pt-BR">Português</option>
+                                            <option value="zh-CN">中文</option>
+                                            <option value="ja-JP">日本語</option>
+                                            <option value="ko-KR">한국어</option>
+                                            <option value="ar-SA">العربية</option>
+                                            <option value="ru-RU">Русский</option>
+                                            <option value="hi-IN">हिन्दी</option>
                                         </select>
-                                        <div class="select-arrow">
-                                            <i class="fas fa-chevron-down"></i>
-                                        </div>
+                                        <i class="fas fa-chevron-down select-arrow"></i>
                                     </div>
                                 </div>
                             </div>
@@ -307,75 +299,23 @@
                             <!-- Voice Recording Area -->
                             <div class="voice-recording-area">
                                 <div class="recording-container">
-                                    <div class="recording-visual" id="recordingVisual">
-                                        <div class="audio-waves">
-                                            <div class="wave"></div>
-                                            <div class="wave"></div>
-                                            <div class="wave"></div>
-                                            <div class="wave"></div>
-                                            <div class="wave"></div>
-                                        </div>
-                                    </div>
-                                    
                                     <button class="voice-record-main-btn" id="mainRecordBtn" onclick="toggleVoiceRecording()">
                                         <div class="mic-icon">
                                             <i class="fas fa-microphone"></i>
                                         </div>
-                                        <span class="record-text">Toca para hablar</span>
                                     </button>
-
-                                    <div class="recording-status" id="recordingStatus">
-                                        <div class="status-text">Listo para grabar</div>
-                                        <div class="status-indicator"></div>
-                                    </div>
                                 </div>
                             </div>
 
                             <!-- Translation Display -->
-                            <div class="translation-display" id="translationDisplay">
+                            <div class="translation-display">
                                 <div class="translation-card original-text">
-                                    <div class="card-header">
-                                        <span class="text-label">Lo que dijiste</span>
-                                        <button class="play-original-btn" onclick="playOriginalText()" title="Reproducir original">
-                                            <i class="fas fa-play"></i>
-                                        </button>
-                                    </div>
-                                    <div class="text-content" id="originalTextContent">
-                                        Presiona el micrófono y comienza a hablar...
-                                    </div>
-                                </div>
-
-                                <div class="translation-arrow">
-                                    <i class="fas fa-arrow-down"></i>
+                                    <div class="text-content" id="originalTextContent"></div>
                                 </div>
 
                                 <div class="translation-card translated-text">
-                                    <div class="card-header">
-                                        <span class="text-label">Traducción</span>
-                                        <button class="play-translation-btn" onclick="playTranslatedText()" title="Reproducir traducción">
-                                            <i class="fas fa-volume-up"></i>
-                                        </button>
-                                    </div>
-                                    <div class="text-content" id="translatedTextContent">
-                                        La traducción aparecerá aquí automáticamente...
-                                    </div>
+                                    <div class="text-content" id="translatedTextContent"></div>
                                 </div>
-                            </div>
-
-                            <!-- Quick Actions -->
-                            <div class="translation-actions">
-                                <button class="action-btn copy-btn" onclick="copyVoiceTranslation()" title="Copiar traducción">
-                                    <i class="fas fa-copy"></i>
-                                    <span>Copiar</span>
-                                </button>
-                                <button class="action-btn share-btn" onclick="shareVoiceTranslation()" title="Compartir traducción">
-                                    <i class="fas fa-share-alt"></i>
-                                    <span>Compartir</span>
-                                </button>
-                                <button class="action-btn clear-btn" onclick="clearVoiceTranslation()" title="Limpiar todo">
-                                    <i class="fas fa-trash-alt"></i>
-                                    <span>Limpiar</span>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -391,7 +331,7 @@
                                 Nueva Llamada
                             </button>
                         </div>
-                        
+
                         <div class="calls-content">
                             <div class="call-tabs">
                                 <button class="call-tab active" onclick="showCallHistory()">
@@ -403,7 +343,7 @@
                                     Marcador
                                 </button>
                             </div>
-                            
+
                             <div class="call-history" id="callHistory">
                                 <div class="empty-calls">
                                     <i class="fas fa-phone-slash"></i>
@@ -411,7 +351,7 @@
                                     <p>Las llamadas aparecerán aquí</p>
                                 </div>
                             </div>
-                            
+
                             <div class="dialer hidden" id="dialer">
                                 <div class="dial-display">
                                     <input type="text" id="dialNumber" placeholder="Número de teléfono" class="dial-input">
@@ -492,7 +432,7 @@
                                 <p class="call-status" id="callStatus">Conectando...</p>
                             </div>
                         </div>
-                        
+
                         <div class="call-animation">
                             <div class="call-waves">
                                 <div class="wave"></div>
@@ -502,7 +442,7 @@
                                 <div class="wave"></div>
                             </div>
                         </div>
-                        
+
                         <div class="call-controls">
                             <button class="call-control-btn mute-btn" onclick="toggleMute()" id="muteBtn">
                                 <i class="fas fa-microphone"></i>
@@ -517,7 +457,7 @@
                                 <i class="fas fa-phone-slash"></i>
                             </button>
                         </div>
-                        
+
                         <div class="call-keypad hidden" id="callKeypad">
                             <div class="keypad-grid">
                                 <button class="keypad-btn" onclick="sendDTMF('1')">1</button>
@@ -544,7 +484,7 @@
                             <h2>Ajustes</h2>
                             <p>Configura tu experiencia en BeDub</p>
                         </div>
-                        
+
                         <div class="settings-content">
                             <div class="settings-group">
                                 <h3>Cuenta</h3>
@@ -557,14 +497,14 @@
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </div>
-                                
+
                                 <div class="setting-item">
                                     <div class="setting-info">
                                         <span class="setting-label">Número de teléfono</span>
                                         <span class="setting-value" id="settingsUserPhone">+1234567890</span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="setting-item">
                                     <div class="setting-info">
                                         <span class="setting-label">Idioma principal</span>
@@ -575,7 +515,7 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div class="settings-group">
                                 <h3>Notificaciones</h3>
                                 <div class="setting-item">
@@ -588,7 +528,7 @@
                                         <span class="slider"></span>
                                     </label>
                                 </div>
-                                
+
                                 <div class="setting-item">
                                     <div class="setting-info">
                                         <span class="setting-label">Notificaciones push</span>
@@ -600,7 +540,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <div class="settings-group">
                                 <h3>Traducción</h3>
                                 <div class="setting-item">
@@ -613,7 +553,7 @@
                                         <span class="slider"></span>
                                     </label>
                                 </div>
-                                
+
                                 <div class="setting-item">
                                     <div class="setting-info">
                                         <span class="setting-label">Mostrar texto original</span>
@@ -625,7 +565,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <div class="settings-group">
                                 <h3>Privacidad</h3>
                                 <div class="setting-item">

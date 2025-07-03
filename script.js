@@ -797,20 +797,17 @@ class EZTranslateApp {
             
             this.isVoiceRecording = true;
             this.updateRecordingUI(true);
-            this.updateRecordingStatus('🎤 Escuchando tu voz...', 'recording');
             
-            // Start microphone animation
-            this.startMicrophoneAnimation();
-            
-            // Clear previous content and show listening state
-            document.getElementById('originalTextContent').innerHTML = '<span style="opacity: 0.7; font-style: italic;">Escuchando...</span>';
-            document.getElementById('translatedTextContent').innerHTML = '<span style="opacity: 0.7; font-style: italic;">Esperando tu voz...</span>';
+            // Clear previous content
+            document.getElementById('originalTextContent').textContent = '';
+            document.getElementById('translatedTextContent').textContent = '';
             
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 this.speechRecognition = new SpeechRecognition();
                 
+                // Auto-detect language or use selected language
                 const fromLang = document.getElementById('voiceFromLanguage').value;
                 this.speechRecognition.lang = fromLang;
                 this.speechRecognition.continuous = true;
@@ -819,7 +816,6 @@ class EZTranslateApp {
                 
                 this.speechRecognition.onstart = () => {
                     console.log('Speech recognition started');
-                    this.updateRecordingStatus('🎙️ Te estoy escuchando...', 'recording');
                 };
                 
                 this.speechRecognition.onresult = async (event) => {
@@ -842,31 +838,27 @@ class EZTranslateApp {
                     // Show real-time text detection
                     if (interimTranscript.trim() || finalTranscript.trim()) {
                         // Display current speech with interim results
-                        const displayText = finalTranscript + 
-                            (interimTranscript ? '<span style="opacity: 0.6; color: #00d4aa; font-style: italic;">' + interimTranscript + '</span>' : '');
-                        originalTextEl.innerHTML = displayText || '<span style="opacity: 0.7; font-style: italic;">Escuchando...</span>';
+                        const displayText = finalTranscript + interimTranscript;
+                        originalTextEl.textContent = displayText.trim();
                         
-                        // Auto-translate final text in real time
-                        if (finalTranscript.trim()) {
+                        // Auto-translate in real time
+                        if (displayText.trim()) {
                             const fromLang = document.getElementById('voiceFromLanguage').value.split('-')[0];
                             const toLang = document.getElementById('voiceToLanguage').value.split('-')[0];
                             
-                            // Show translating indicator
-                            translatedTextEl.innerHTML = '<span style="opacity: 0.6; color: #ffa502;">🔄 Traduciendo...</span>';
-                            
                             try {
-                                const translation = await this.translateText(finalTranscript.trim(), fromLang, toLang);
-                                translatedTextEl.innerHTML = translation;
+                                const translation = await this.translateText(displayText.trim(), fromLang, toLang);
+                                translatedTextEl.textContent = translation;
                                 
-                                // Speak translation automatically
-                                setTimeout(() => {
-                                    this.speakText(translation, document.getElementById('voiceToLanguage').value);
-                                }, 300);
+                                // Speak translation automatically for final text
+                                if (finalTranscript.trim()) {
+                                    setTimeout(() => {
+                                        this.speakText(translation, document.getElementById('voiceToLanguage').value);
+                                    }, 200);
+                                }
                             } catch (error) {
-                                translatedTextEl.innerHTML = '<span style="color: #ff4757;">Error en la traducción</span>';
+                                translatedTextEl.textContent = 'Error en la traducción';
                             }
-                        } else if (interimTranscript.trim()) {
-                            translatedTextEl.innerHTML = '<span style="opacity: 0.7; font-style: italic;">Detectando voz...</span>';
                         }
                     }
                 };
@@ -923,71 +915,26 @@ class EZTranslateApp {
     stopVoiceRecording() {
         this.isVoiceRecording = false;
         this.updateRecordingUI(false);
-        this.updateRecordingStatus('✅ Presiona el micrófono para comenzar', 'ready');
-        this.stopMicrophoneAnimation();
         
         if (this.speechRecognition) {
             this.speechRecognition.stop();
             this.speechRecognition = null;
         }
-        
-        // Clean up final text display - remove HTML formatting but keep content
-        const originalTextEl = document.getElementById('originalTextContent');
-        if (originalTextEl.innerHTML && originalTextEl.textContent.trim() && 
-            !originalTextEl.textContent.includes('Escuchando') && 
-            !originalTextEl.textContent.includes('Presiona')) {
-            originalTextEl.textContent = originalTextEl.textContent; // Remove HTML styling but keep text
-        }
     }
     
     updateRecordingUI(isRecording) {
         const recordBtn = document.getElementById('mainRecordBtn');
-        const recordingVisual = document.getElementById('recordingVisual');
-        const audioWaves = recordingVisual ? recordingVisual.querySelector('.audio-waves') : null;
         
         if (isRecording) {
             recordBtn.classList.add('recording');
-            recordBtn.querySelector('.record-text').textContent = 'Detener';
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-stop';
-            if (recordingVisual) recordingVisual.classList.add('active');
-            if (audioWaves) audioWaves.classList.add('active');
         } else {
             recordBtn.classList.remove('recording');
-            recordBtn.querySelector('.record-text').textContent = 'Toca para hablar';
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-microphone';
-            if (recordingVisual) recordingVisual.classList.remove('active');
-            if (audioWaves) audioWaves.classList.remove('active');
         }
     }
     
-    startMicrophoneAnimation() {
-        const audioWaves = document.querySelector('.audio-waves');
-        const waves = audioWaves.querySelectorAll('.wave');
-        
-        // Create random wave animation
-        this.waveInterval = setInterval(() => {
-            waves.forEach((wave, index) => {
-                const height = Math.random() * 40 + 20;
-                wave.style.height = height + 'px';
-                wave.style.animationDelay = (index * 0.1) + 's';
-            });
-        }, 150);
-    }
     
-    stopMicrophoneAnimation() {
-        if (this.waveInterval) {
-            clearInterval(this.waveInterval);
-            this.waveInterval = null;
-        }
-    }
-    
-    updateRecordingStatus(text, status) {
-        const statusText = document.querySelector('.status-text');
-        const statusIndicator = document.querySelector('.status-indicator');
-        
-        statusText.textContent = text;
-        statusIndicator.className = `status-indicator ${status}`;
-    }
     
     async translateVoiceText(text) {
         const fromLang = document.getElementById('voiceFromLanguage').value.split('-')[0];
@@ -1128,9 +1075,8 @@ class EZTranslateApp {
     }
     
     clearVoiceTranslation() {
-        document.getElementById('originalTextContent').textContent = 'Presiona el micrófono y comienza a hablar...';
-        document.getElementById('translatedTextContent').textContent = 'La traducción aparecerá aquí automáticamente...';
-        this.updateRecordingStatus('Listo para grabar', 'ready');
+        document.getElementById('originalTextContent').textContent = '';
+        document.getElementById('translatedTextContent').textContent = '';
     }
     
     // ============ CALLS FUNCTIONS ============
