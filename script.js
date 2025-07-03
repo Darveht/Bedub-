@@ -399,6 +399,7 @@ class EZTranslateApp {
         const noChat = document.querySelector('.no-chat-selected');
         const activeChat = document.getElementById('activeChat');
         const bottomNav = document.querySelector('.bottom-nav');
+        const messageInputArea = document.querySelector('.message-input-area');
         
         // Hide sidebar and show chat
         chatSidebar.classList.add('chat-open');
@@ -410,6 +411,15 @@ class EZTranslateApp {
             bottomNav.style.transform = 'translateY(100%)';
             bottomNav.style.visibility = 'hidden';
             bottomNav.style.opacity = '0';
+        }
+        
+        // Ensure message input is always visible
+        if (messageInputArea) {
+            messageInputArea.style.display = 'block';
+            messageInputArea.style.visibility = 'visible';
+            messageInputArea.style.opacity = '1';
+            messageInputArea.style.bottom = '0';
+            messageInputArea.style.zIndex = '100';
         }
         
         // Hide placeholder completely and show active chat
