@@ -1,43 +1,3 @@
-
-// Inicializar soporte móvil mejorado
-    initializeMobileSupport() {
-    // Prevenir zoom al hacer doble tap
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', (event) => {
-        const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, false);
-
-    // Mejorar respuesta táctil
-    document.addEventListener('touchstart', (event) => {
-        // Agregar clase de toque activo
-        if (event.target.classList.contains('nav-item') || 
-            event.target.classList.contains('auth-btn') ||
-            event.target.classList.contains('voice-record-main-btn')) {
-            event.target.classList.add('touch-active');
-        }
-    }, { passive: true });
-
-    document.addEventListener('touchend', (event) => {
-        // Remover clase de toque activo
-        setTimeout(() => {
-            if (event.target.classList.contains('touch-active')) {
-                event.target.classList.remove('touch-active');
-            }
-        }, 150);
-    }, { passive: true });
-
-    // Configurar viewport para móviles
-        const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        }
-    }
-
-
 // Aplicación EZTranslate sin dependencias externas
 class EZTranslateApp {
     constructor() {
@@ -68,11 +28,6 @@ class EZTranslateApp {
         this.loadMockData();
         this.requestNotificationPermission();
         this.checkExistingAuth();
-
-        // Initialize mobile support
-        this.initializeMobileSupport();
-
-        
     }
 
     // Verificar si el usuario ya está autenticado
@@ -246,76 +201,54 @@ class EZTranslateApp {
 
     // ============ AUTH FUNCTIONS (SIN FIREBASE) ============
     async sendVerificationCode() {
-        console.log('sendVerificationCode called');
-
         const phoneInput = document.getElementById('phoneNumber');
-        const countryCode = document.getElementById('countryCode');
-        const language = document.getElementById('preferredLanguage');
+        const countryCode = document.getElementById('countryCode').value;
+        const language = document.getElementById('preferredLanguage').value;
 
-        if (!phoneInput || !countryCode || !language) {
-            console.error('Required elements not found');
-            this.showAlert('Error: Elementos del formulario no encontrados');
+        if (!phoneInput) {
+            console.error('Phone input element not found');
+            this.showAlert('Error: No se encontró el campo de teléfono');
             return;
         }
 
-        const phoneNumber = phoneInput.value.trim();
-        console.log('Phone number:', phoneNumber);
+        const phoneNumber = phoneInput.value;
+        console.log('Valor del input:', phoneNumber);
 
-        if (!phoneNumber) {
+        if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
             return;
         }
 
         // Limpiar y validar número
         const cleanPhone = phoneNumber.replace(/\D/g, '');
-        console.log('Clean phone:', cleanPhone);
+        console.log('Número limpio:', cleanPhone);
 
-        if (cleanPhone.length < 7) {
-            this.showAlert('Número de teléfono muy corto');
+        if (cleanPhone.length < 10) {
+            this.showAlert('Número de teléfono demasiado corto (mínimo 10 dígitos)');
             return;
         }
 
-        const fullPhone = countryCode.value + cleanPhone;
-        console.log('Full phone:', fullPhone);
+        const fullPhone = countryCode + cleanPhone;
+        console.log('Número completo a enviar:', fullPhone);
 
-        // Disable button to prevent multiple clicks
-        const sendBtn = document.getElementById('sendCodeBtn');
-        if (sendBtn) {
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<span>Enviando...</span>';
-        }
+        this.showLoading('Enviando código SMS...');
 
         try {
-            this.showLoading('Enviando código SMS...');
+            // Simular envío de SMS
+            await this.delay(2000);
 
-            // Simular envío de SMS con timeout más corto
-            await this.delay(1500);
-
-            // Store data
-            localStorage.setItem('userLanguage', language.value);
+            document.getElementById('phoneDisplay').textContent = fullPhone;
+            localStorage.setItem('userLanguage', language);
             localStorage.setItem('userPhone', fullPhone);
-
-            // Update UI
-            const phoneDisplay = document.getElementById('phoneDisplay');
-            if (phoneDisplay) {
-                phoneDisplay.textContent = fullPhone;
-            }
-
             this.hideLoading();
             this.switchToVerification();
             this.showAlert(`¡Código enviado! Usa: ${this.mockVerificationCode}`);
-            console.log('Verification process completed');
+            console.log('Código de prueba:', this.mockVerificationCode);
 
         } catch (error) {
-            console.error('Error in sendVerificationCode:', error);
             this.hideLoading();
-            this.showAlert('Error al enviar código. Intenta de nuevo.');
-        } finally {
-            // Re-enable button
-            if (sendBtn) {
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '<span>Enviar Código</span><i class="fas fa-arrow-right"></i>';
-            }
+            console.error('Error completo:', error);
+            this.showAlert('Error al enviar código SMS');
         }
     }
 
@@ -351,8 +284,7 @@ class EZTranslateApp {
             // Simular verificación (en lugar de Firebase)
             await this.delay(1500);
 
-            // Aceptar cualquier código de 6 dígitos para facilitar el acceso
-            if (code.length === 6) {
+            if (code === this.mockVerificationCode) {
                 // Crear usuario mock
                 this.currentUser = {
                     uid: 'user_' + Date.now(),
@@ -377,7 +309,7 @@ class EZTranslateApp {
                 }
             } else {
                 this.hideLoading();
-                this.showAlert('Código incorrecto. Usa cualquier código de 6 dígitos');
+                this.showAlert('Código incorrecto. Usa: ' + this.mockVerificationCode);
                 // Limpiar campos de código
                 codeInputs.forEach(input => input.value = '');
                 codeInputs[0].focus();
@@ -1017,11 +949,8 @@ class EZTranslateApp {
             const sourceLang = langMap[fromLang] || fromLang.split('-')[0];
             const targetLang = langMap[toLang] || toLang.split('-')[0];
 
-            // Usar API pública de LibreTranslate con timeout
+            // Usar API pública de LibreTranslate (puedes cambiar la URL)```python
             const apiUrl = 'https://libretranslate.de/translate';
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -1033,11 +962,8 @@ class EZTranslateApp {
                     source: sourceLang,
                     target: targetLang,
                     format: 'text'
-                }),
-                signal: controller.signal
+                })
             });
-
-            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -1050,11 +976,7 @@ class EZTranslateApp {
                 targetLanguage: targetLang
             };
         } catch (error) {
-            if (error.name === 'AbortError') {
-                console.error('Timeout en LibreTranslate API');
-            } else {
-                console.error('Error en LibreTranslate API:', error);
-            }
+            console.error('Error en LibreTranslate API:', error);
             throw error;
         }
     }
@@ -1248,60 +1170,55 @@ class EZTranslateApp {
     }
 
     showLoading(text = 'Cargando...') {
-        console.log('Showing loading:', text);
+        let loadingOverlay = document.getElementById('loadingOverlay');
+        if (!loadingOverlay) {
+            // Create loading overlay if it doesn't exist
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlay';
+            loadingOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                color: white;
+                font-size: 18px;
+                font-weight: 600;
+            `;
+            loadingOverlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid #00d4aa; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                    <div id="loadingText">${text}</div>
+                </div>
+            `;
 
-        // Use requestAnimationFrame to prevent UI blocking
-        requestAnimationFrame(() => {
-            let loadingOverlay = document.getElementById('loadingOverlay');
-            if (!loadingOverlay) {
-                // Create loading overlay if it doesn't exist
-                loadingOverlay = document.createElement('div');
-                loadingOverlay.id = 'loadingOverlay';
-                loadingOverlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 9999;
-                    color: white;
-                    font-size: 18px;
-                    font-weight: 600;
+            // Add spinner animation
+            if (!document.querySelector('#spinnerStyles')) {
+                const style = document.createElement('style');
+                style.id = 'spinnerStyles';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
                 `;
-                loadingOverlay.innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid #00d4aa; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-                        <div id="loadingText">${text}</div>
-                    </div>
-                `;
-
-                // Add spinner animation
-                if (!document.querySelector('#spinnerStyles')) {
-                    const style = document.createElement('style');
-                    style.id = 'spinnerStyles';
-                    style.textContent = `
-                        @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
-
-                document.body.appendChild(loadingOverlay);
-            } else {
-                const loadingText = document.getElementById('loadingText');
-                if (loadingText) {
-                    loadingText.textContent = text;
-                }
-                loadingOverlay.classList.remove('hidden');
-                loadingOverlay.style.display = 'flex';
+                document.head.appendChild(style);
             }
-        });
+
+            document.body.appendChild(loadingOverlay);
+        } else {
+            const loadingText = document.getElementById('loadingText');
+            if (loadingText) {
+                loadingText.textContent = text;
+            }
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.style.display = 'flex';
+        }
     }
 
     hideLoading() {
@@ -1400,10 +1317,7 @@ class EZTranslateApp {
     }
 
     delay(ms) {
-        return new Promise((resolve) => {
-            const timeout = Math.max(0, Math.min(ms || 1000, 10000));
-            setTimeout(resolve, timeout);
-        });
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // ============ NAVIGATION FUNCTIONS ============
@@ -2060,9 +1974,11 @@ class EZTranslateApp {
         this.showAlert('Menú de chat próximamente');
     }
 
-    
-
-
+    makeVideoCall() {
+        if (this.currentChat) {
+            this.showAlert('Iniciando videollamada...');
+        }
+    }
 }
 
 // Voice recording functionality
@@ -2148,18 +2064,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global functions for HTML onclick events
 function sendVerificationCode() {
-    try {
-        console.log('Global sendVerificationCode called');
-        if (app && typeof app.sendVerificationCode === 'function') {
-            app.sendVerificationCode();
-        } else {
-            console.error('App not initialized or sendVerificationCode not available');
-            alert('Error: La aplicación no está lista. Recarga la página.');
-        }
-    } catch (error) {
-        console.error('Error in global sendVerificationCode:', error);
-        alert('Error al enviar código. Recarga la página e intenta de nuevo.');
-    }
+    app.sendVerificationCode();
 }
 
 function verifyCode() {
@@ -2394,7 +2299,9 @@ function makeCall() {
     app.makeCall();
 }
 
-
+function makeVideoCall() {
+    app.makeVideoCall();
+}
 
 function makeCallFromChat() {
     app.makeCallFromChat();
@@ -2403,4 +2310,3 @@ function makeCallFromChat() {
 function toggleChatMenu() {
     app.toggleChatMenu();
 }
-
