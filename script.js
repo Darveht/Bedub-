@@ -46,6 +46,10 @@ class EZTranslateApp {
 
     // Verificar si el usuario ya está autenticado
     checkExistingAuth() {
+        // Por seguridad, limpiar autenticación previa para testing
+        localStorage.removeItem('userAuthenticated');
+        localStorage.removeItem('hasSeenTutorial');
+        
         const isAuthenticated = localStorage.getItem('userAuthenticated');
         const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
         
@@ -54,10 +58,16 @@ class EZTranslateApp {
             document.getElementById('authContainer').classList.add('hidden');
             
             if (hasSeenTutorial === 'true') {
-                document.getElementById('mainApp').classList.remove('hidden');
+                const mainApp = document.getElementById('mainApp');
+                if (mainApp) {
+                    mainApp.classList.remove('hidden');
+                }
                 this.appState = 'main';
             } else {
-                document.getElementById('tutorialContainer').classList.remove('hidden');
+                const tutorialContainer = document.getElementById('tutorialContainer');
+                if (tutorialContainer) {
+                    tutorialContainer.classList.remove('hidden');
+                }
                 this.appState = 'tutorial';
             }
         }
@@ -242,9 +252,16 @@ class EZTranslateApp {
     
     // ============ AUTH FUNCTIONS ============
     async sendVerificationCode() {
-        const phoneNumber = document.getElementById('phoneNumber').value;
+        const phoneInput = document.getElementById('phoneNumber');
         const countryCode = document.getElementById('countryCode').value;
         const language = document.getElementById('preferredLanguage').value;
+        
+        if (!phoneInput) {
+            console.error('Phone input element not found');
+            return;
+        }
+        
+        const phoneNumber = phoneInput.value;
         
         if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
@@ -1204,12 +1221,63 @@ class EZTranslateApp {
     }
     
     showLoading(text = 'Cargando...') {
-        document.getElementById('loadingText').textContent = text;
-        document.getElementById('loadingOverlay').classList.remove('hidden');
+        let loadingOverlay = document.getElementById('loadingOverlay');
+        if (!loadingOverlay) {
+            // Create loading overlay if it doesn't exist
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlay';
+            loadingOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                color: white;
+                font-size: 18px;
+                font-weight: 600;
+            `;
+            loadingOverlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid #00d4aa; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                    <div id="loadingText">${text}</div>
+                </div>
+            `;
+            
+            // Add spinner animation
+            if (!document.querySelector('#spinnerStyles')) {
+                const style = document.createElement('style');
+                style.id = 'spinnerStyles';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(loadingOverlay);
+        } else {
+            const loadingText = document.getElementById('loadingText');
+            if (loadingText) {
+                loadingText.textContent = text;
+            }
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.style.display = 'flex';
+        }
     }
     
     hideLoading() {
-        document.getElementById('loadingOverlay').classList.add('hidden');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+            loadingOverlay.style.display = 'none';
+        }
     }
     
     goBackToChats() {
@@ -1261,7 +1329,42 @@ class EZTranslateApp {
     }
 
     showAlert(message) {
-        alert(message); // In production, use a custom modal
+        // Create a better alert system
+        const alertDiv = document.createElement('div');
+        alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4757;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        `;
+        alertDiv.textContent = message;
+        
+        // Add animation keyframes
+        if (!document.querySelector('#alertStyles')) {
+            const style = document.createElement('style');
+            style.id = 'alertStyles';
+            style.textContent = `
+                @keyframes slideDown {
+                    from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
     }
     
     delay(ms) {
