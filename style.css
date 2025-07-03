@@ -2357,10 +2357,8 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* Botón de instalación PWA */
-.install-app-btn {
-    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
-    color: #000;
+/* Botones de aplicación */
+.install-app-btn, .generate-apk-btn, .share-app-btn {
     border: none;
     border-radius: 12px;
     padding: 12px 20px;
@@ -2371,9 +2369,16 @@ input:checked + .slider:before {
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
-    min-width: 100px;
+    min-width: 120px;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.install-app-btn {
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    color: #000;
+    box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
 }
 
 .install-app-btn:hover {
@@ -2382,7 +2387,31 @@ input:checked + .slider:before {
     box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
 }
 
-.install-app-btn:disabled {
+.generate-apk-btn {
+    background: linear-gradient(135deg, #3ddc84 0%, #2db55e 100%);
+    color: #000;
+    box-shadow: 0 2px 8px rgba(61, 220, 132, 0.3);
+}
+
+.generate-apk-btn:hover {
+    background: linear-gradient(135deg, #2db55e 0%, #1e8e3e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(61, 220, 132, 0.4);
+}
+
+.share-app-btn {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.share-app-btn:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.install-app-btn:disabled, .generate-apk-btn:disabled, .share-app-btn:disabled {
     background: #ccc;
     color: #666;
     cursor: not-allowed;
@@ -2399,15 +2428,31 @@ input:checked + .slider:before {
     background: #218838;
 }
 
-/* Animación de instalación */
-.install-app-btn.installing {
+/* Animación de carga */
+.install-app-btn.installing, .generate-apk-btn.generating, .share-app-btn.sharing {
     background: #ffc107;
     color: #000;
     pointer-events: none;
 }
 
-.install-app-btn.installing i {
+.install-app-btn.installing i, .generate-apk-btn.generating i, .share-app-btn.sharing i {
     animation: spin 1s linear infinite;
+}
+
+/* Efecto shimmer para botones */
+.install-app-btn::before, .generate-apk-btn::before, .share-app-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.install-app-btn:hover::before, .generate-apk-btn:hover::before, .share-app-btn:hover::before {
+    left: 100%;
 }
 
 @keyframes spin {

@@ -2196,40 +2196,89 @@ class EZTranslateApp {
         }
     }
 
-    // Generar APK usando PWABuilder (para mostrar en ajustes)
+    // Generar APK usando PWABuilder
     async generateAPK() {
-        const generateBtn = document.createElement('button');
-        generateBtn.style.cssText = `
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
-            margin-top: 8px;
-        `;
+        const generateBtn = document.querySelector('.generate-apk-btn');
+        
+        if (generateBtn) {
+            generateBtn.classList.add('generating');
+            generateBtn.innerHTML = '<i class="fas fa-spinner"></i><span>Generando...</span>';
+        }
 
-        generateBtn.innerHTML = '<i class="fas fa-android"></i><span>Generar APK</span>';
-
-        generateBtn.onclick = () => {
+        try {
             this.showAlert('Redirigiendo a PWABuilder para generar APK...');
 
             // Abrir PWABuilder con la URL de la app
             const pwaBuilderUrl = `https://www.pwabuilder.com/reportcard?site=${encodeURIComponent(window.location.origin)}`;
             window.open(pwaBuilderUrl, '_blank');
-        };
 
-        // Agregar después del botón de instalación
-        const installSection = document.getElementById('installAppSection');
-        if (installSection) {
-            installSection.appendChild(generateBtn);
+            // Esperar un poco y mostrar mensaje
+            setTimeout(() => {
+                this.showAlert('¡APK en proceso! Sigue las instrucciones en PWABuilder para descargar tu APK.');
+                
+                if (generateBtn) {
+                    generateBtn.classList.remove('generating');
+                    generateBtn.innerHTML = '<i class="fab fa-android"></i><span>Generar APK</span>';
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error generando APK:', error);
+            this.showAlert('Error al generar APK. Inténtalo de nuevo.');
+            
+            if (generateBtn) {
+                generateBtn.classList.remove('generating');
+                generateBtn.innerHTML = '<i class="fab fa-android"></i><span>Generar APK</span>';
+            }
+        }
+    }
+
+    // Compartir aplicación
+    async shareApp() {
+        const shareBtn = document.querySelector('.share-app-btn');
+        
+        if (shareBtn) {
+            shareBtn.classList.add('sharing');
+            shareBtn.innerHTML = '<i class="fas fa-spinner"></i><span>Compartiendo...</span>';
+        }
+
+        try {
+            const shareData = {
+                title: 'BeDub - Comunicación Sin Barreras',
+                text: '¡Descubre BeDub! La aplicación que rompe las barreras del idioma. Chatea, traduce y llama en tiempo real con personas de todo el mundo.',
+                url: window.location.origin
+            };
+
+            if (navigator.share) {
+                await navigator.share(shareData);
+                this.showAlert('¡Aplicación compartida exitosamente!');
+            } else {
+                // Fallback para navegadores que no soportan Web Share API
+                const shareText = `${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`;
+                
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(shareText);
+                    this.showAlert('Enlace copiado al portapapeles. ¡Compártelo donde quieras!');
+                } else {
+                    // Último fallback
+                    const textArea = document.createElement('textarea');
+                    textArea.value = shareText;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    this.showAlert('Enlace copiado al portapapeles. ¡Compártelo donde quieras!');
+                }
+            }
+
+        } catch (error) {
+            console.error('Error compartiendo:', error);
+            this.showAlert('Compartir cancelado o no disponible');
+        } finally {
+            if (shareBtn) {
+                shareBtn.classList.remove('sharing');
+                shareBtn.innerHTML = '<i class="fas fa-share-alt"></i><span>Compartir</span>';
+            }
         }
     }
 
@@ -2581,4 +2630,12 @@ function installPWA() {
 
 function updateApp() {
     app.updateApp();
+}
+
+function generateAPK() {
+    app.generateAPK();
+}
+
+function shareApp() {
+    app.shareApp();
 }
