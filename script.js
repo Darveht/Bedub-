@@ -258,10 +258,12 @@ class EZTranslateApp {
         
         if (!phoneInput) {
             console.error('Phone input element not found');
+            this.showAlert('Error: No se encontró el campo de teléfono');
             return;
         }
         
         const phoneNumber = phoneInput.value;
+        console.log('Valor del input:', phoneNumber);
         
         if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
@@ -270,36 +272,59 @@ class EZTranslateApp {
         
         // Limpiar y validar número
         const cleanPhone = phoneNumber.replace(/\D/g, '');
+        console.log('Número limpio:', cleanPhone);
+        
         if (cleanPhone.length < 10) {
-            this.showAlert('Número de teléfono demasiado corto');
+            this.showAlert('Número de teléfono demasiado corto (mínimo 10 dígitos)');
             return;
         }
         
         const fullPhone = countryCode + cleanPhone;
-        console.log('Enviando SMS a:', fullPhone);
+        console.log('Número completo a enviar:', fullPhone);
         
-        this.showLoading('Enviando código...');
+        this.showLoading('Configurando verificación...');
         
         try {
+            // Primero verificar que Firebase esté disponible
+            if (typeof sendSMSVerification === 'undefined') {
+                throw new Error('Firebase no está configurado correctamente');
+            }
+            
+            console.log('Iniciando proceso de verificación SMS...');
+            this.showLoading('Enviando código SMS...');
+            
             // Enviar código SMS con Firebase
             const result = await sendSMSVerification(fullPhone);
+            console.log('Resultado de verificación:', result);
             
-            if (result.success) {
+            if (result && result.success) {
                 document.getElementById('phoneDisplay').textContent = fullPhone;
                 localStorage.setItem('userLanguage', language);
                 localStorage.setItem('userPhone', fullPhone);
                 this.hideLoading();
                 this.switchToVerification();
-                console.log('Código enviado exitosamente');
+                this.showAlert('¡Código enviado exitosamente!');
+                console.log('Código enviado exitosamente a:', fullPhone);
             } else {
                 this.hideLoading();
-                this.showAlert(result.error || 'Error al enviar código');
-                console.error('Error en envío:', result.error);
+                const errorMsg = result?.error || 'Error desconocido al enviar código';
+                this.showAlert(errorMsg);
+                console.error('Error en envío de SMS:', errorMsg);
             }
         } catch (error) {
             this.hideLoading();
-            this.showAlert('Error de conexión. Verifica tu internet e intenta de nuevo.');
-            console.error('Error sending verification code:', error);
+            console.error('Error completo:', error);
+            
+            let userMessage = 'Error al enviar código SMS';
+            if (error.message.includes('Firebase')) {
+                userMessage = 'Error de configuración. Recarga la página e intenta de nuevo.';
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                userMessage = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+            } else if (error.code) {
+                userMessage = `Error Firebase: ${error.code}`;
+            }
+            
+            this.showAlert(userMessage);
         }
     }
     

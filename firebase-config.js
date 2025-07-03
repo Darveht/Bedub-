@@ -1,13 +1,13 @@
 
 // Firebase Configuration
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { 
     getAuth, 
     signInWithPhoneNumber, 
     RecaptchaVerifier,
     onAuthStateChanged 
-} from 'firebase/auth';
-import { getAnalytics } from 'firebase/analytics';
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 import { 
     getFirestore, 
     doc, 
@@ -19,7 +19,7 @@ import {
     query,
     orderBy,
     where
-} from 'firebase/firestore';
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
