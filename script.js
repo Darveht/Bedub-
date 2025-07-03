@@ -797,7 +797,14 @@ class EZTranslateApp {
             
             this.isVoiceRecording = true;
             this.updateRecordingUI(true);
-            this.updateRecordingStatus('Escuchando...', 'recording');
+            this.updateRecordingStatus('🎤 Escuchando...', 'recording');
+            
+            // Start microphone animation
+            this.startMicrophoneAnimation();
+            
+            // Clear previous content
+            document.getElementById('originalTextContent').textContent = '';
+            document.getElementById('translatedTextContent').textContent = '';
             
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -806,29 +813,49 @@ class EZTranslateApp {
                 
                 const fromLang = document.getElementById('voiceFromLanguage').value;
                 this.speechRecognition.lang = fromLang;
-                this.speechRecognition.continuous = false;
+                this.speechRecognition.continuous = true;
                 this.speechRecognition.interimResults = true;
                 
                 this.speechRecognition.onresult = async (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    const isFinal = event.results[0].isFinal;
+                    let interimTranscript = '';
+                    let finalTranscript = '';
                     
-                    document.getElementById('originalTextContent').textContent = transcript;
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
                     
-                    if (isFinal) {
-                        this.updateRecordingStatus('Traduciendo...', 'processing');
-                        await this.translateVoiceText(transcript);
+                    // Update original text in real time
+                    const originalTextEl = document.getElementById('originalTextContent');
+                    originalTextEl.innerHTML = finalTranscript + '<span style="opacity: 0.6; font-style: italic;">' + interimTranscript + '</span>';
+                    
+                    // Translate in real time if we have final text
+                    if (finalTranscript.trim()) {
+                        this.updateRecordingStatus('🔄 Traduciendo...', 'processing');
+                        await this.translateVoiceText(finalTranscript.trim());
+                        this.updateRecordingStatus('🎤 Escuchando...', 'recording');
                     }
                 };
                 
                 this.speechRecognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
                     this.stopVoiceRecording();
-                    this.showAlert('Error en el reconocimiento de voz');
+                    this.showAlert('Error en el reconocimiento de voz. Intenta de nuevo.');
                 };
                 
                 this.speechRecognition.onend = () => {
-                    this.stopVoiceRecording();
+                    if (this.isVoiceRecording) {
+                        // Restart recognition if still recording
+                        try {
+                            this.speechRecognition.start();
+                        } catch (e) {
+                            this.stopVoiceRecording();
+                        }
+                    }
                 };
                 
                 this.speechRecognition.start();
@@ -836,13 +863,6 @@ class EZTranslateApp {
                 this.showAlert('El reconocimiento de voz no está disponible en este navegador');
                 this.stopVoiceRecording();
             }
-            
-            // Stop after 10 seconds automatically
-            setTimeout(() => {
-                if (this.isVoiceRecording) {
-                    this.stopVoiceRecording();
-                }
-            }, 10000);
             
         } catch (error) {
             console.error('Error accessing microphone:', error);
@@ -854,11 +874,18 @@ class EZTranslateApp {
     stopVoiceRecording() {
         this.isVoiceRecording = false;
         this.updateRecordingUI(false);
-        this.updateRecordingStatus('Listo para grabar', 'ready');
+        this.updateRecordingStatus('✅ Listo para grabar', 'ready');
+        this.stopMicrophoneAnimation();
         
         if (this.speechRecognition) {
             this.speechRecognition.stop();
             this.speechRecognition = null;
+        }
+        
+        // Clean up final text display
+        const originalTextEl = document.getElementById('originalTextContent');
+        if (originalTextEl.innerHTML) {
+            originalTextEl.textContent = originalTextEl.textContent; // Remove HTML styling
         }
     }
     
@@ -869,16 +896,43 @@ class EZTranslateApp {
         
         if (isRecording) {
             recordBtn.classList.add('recording');
-            recordBtn.querySelector('.record-text').textContent = 'Grabando...';
+            recordBtn.querySelector('.record-text').textContent = '🔴 Grabando...';
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-stop';
             recordingVisual.classList.add('active');
             audioWaves.classList.add('active');
+            
+            // Add pulsing effect to button
+            recordBtn.style.animation = 'recordingPulse 1.5s ease-in-out infinite';
         } else {
             recordBtn.classList.remove('recording');
             recordBtn.querySelector('.record-text').textContent = 'Toca para hablar';
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-microphone';
             recordingVisual.classList.remove('active');
             audioWaves.classList.remove('active');
+            
+            // Remove animation
+            recordBtn.style.animation = '';
+        }
+    }
+    
+    startMicrophoneAnimation() {
+        const audioWaves = document.querySelector('.audio-waves');
+        const waves = audioWaves.querySelectorAll('.wave');
+        
+        // Create random wave animation
+        this.waveInterval = setInterval(() => {
+            waves.forEach((wave, index) => {
+                const height = Math.random() * 40 + 20;
+                wave.style.height = height + 'px';
+                wave.style.animationDelay = (index * 0.1) + 's';
+            });
+        }, 150);
+    }
+    
+    stopMicrophoneAnimation() {
+        if (this.waveInterval) {
+            clearInterval(this.waveInterval);
+            this.waveInterval = null;
         }
     }
     
@@ -895,17 +949,43 @@ class EZTranslateApp {
         const toLang = document.getElementById('voiceToLanguage').value.split('-')[0];
         
         try {
+            // Show translation loading with animation
+            const translatedEl = document.getElementById('translatedTextContent');
+            translatedEl.innerHTML = '<span style="opacity: 0.6;">Traduciendo<span class="dots">...</span></span>';
+            
+            // Animate dots
+            const dots = translatedEl.querySelector('.dots');
+            let dotCount = 0;
+            const dotInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                dots.textContent = '.'.repeat(dotCount);
+            }, 300);
+            
             const translation = await this.translateText(text, fromLang, toLang);
-            document.getElementById('translatedTextContent').textContent = translation;
             
-            // Automatically speak the translation
-            await this.speakText(translation, document.getElementById('voiceToLanguage').value);
+            // Clear dot animation
+            clearInterval(dotInterval);
             
-            this.updateRecordingStatus('Traducción completada', 'ready');
+            // Show translation with typing effect
+            translatedEl.textContent = '';
+            await this.typeText(translatedEl, translation);
+            
+            // Automatically speak the translation after a short delay
+            setTimeout(async () => {
+                await this.speakText(translation, document.getElementById('voiceToLanguage').value);
+            }, 500);
+            
         } catch (error) {
             console.error('Translation error:', error);
-            this.showAlert('Error en la traducción');
-            this.updateRecordingStatus('Error en traducción', 'ready');
+            document.getElementById('translatedTextContent').textContent = 'Error en la traducción. Intenta de nuevo.';
+        }
+    }
+    
+    async typeText(element, text, speed = 30) {
+        element.textContent = '';
+        for (let i = 0; i < text.length; i++) {
+            element.textContent += text.charAt(i);
+            await new Promise(resolve => setTimeout(resolve, speed));
         }
     }
     
