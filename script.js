@@ -259,8 +259,7 @@ class EZTranslateApp {
         document.getElementById('mainApp').classList.remove('hidden');
         this.appState = 'main';
         
-        // Set user info
-        document.getElementById('userName').textContent = this.currentUser.name;
+        // Header removed, no need to update user info there
         
         // Show placeholder initially
         const chatMain = document.querySelector('.chat-main');
@@ -899,13 +898,7 @@ class EZTranslateApp {
             }
         });
         
-        // Handle header visibility for translator and newChat sections
-        const mainHeader = document.querySelector('.main-header');
-        if (section === 'translator' || section === 'newChat') {
-            mainHeader.style.display = 'none';
-        } else {
-            mainHeader.style.display = 'flex';
-        }
+        // Header has been completely removed, no need for visibility logic
         
         // Update settings if switching to settings
         if (section === 'settings') {

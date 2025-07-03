@@ -477,76 +477,7 @@ body {
 }
 
 .main-header {
-    background: #000;
-    color: white;
-    padding: 16px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    z-index: 10;
-}
-
-#translatorSection.active ~ .main-header,
-.main-app:has(#translatorSection.active) .main-header {
-    display: none;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #00d4aa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #000;
-    font-size: 18px;
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-name {
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.user-status {
-    font-size: 12px;
-    color: #00d4aa;
-}
-
-.header-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.header-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s ease;
-}
-
-.header-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    display: none !important;
 }
 
 .chat-layout {
