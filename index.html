@@ -4,27 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BeDub - Comunicación Sin Barreras</title>
-
-    <!-- PWA Meta Tags -->
-    <meta name="description" content="Aplicación de traducción y comunicación en tiempo real sin barreras lingüísticas">
-    <meta name="theme-color" content="#00d4aa">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="BeDub">
-    <meta name="msapplication-TileColor" content="#00d4aa">
-    <meta name="msapplication-tap-highlight" content="no">
-
-    <!-- Manifest -->
-    <link rel="manifest" href="/manifest.json">
-
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSI0OCIgZmlsbD0iIzAwZDRhYSIvPjx0ZXh0IHg9Ijk2IiB5PSIxMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iIzAwMCI+QjwvdGV4dD48L3N2Zz4=">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSIjMDBkNGFhIi8+PHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseToiQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiMwMDAiPkI8L3RleHQ+PC9zdmc+">
-
     <link href="style.css" rel="stylesheet" type="text/css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"></head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
 <body>
     <div class="app-wrapper">
         <!-- Login/Register Page -->
@@ -72,7 +54,7 @@
                         </select>
                     </div>
 
-                    <button class="auth-btn" id="sendCodeBtn" type="button" onclick="sendVerificationCode()">
+                    <button class="auth-btn" id="sendCodeBtn" onclick="sendVerificationCode()">
                         <span>Enviar Código</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -158,7 +140,7 @@
 
         <!-- Main Chat Application -->
         <div class="main-app hidden" id="mainApp">
-
+            
 
             <!-- App Content -->
             <div class="app-content">
@@ -173,7 +155,7 @@
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
-
+                            
                             <div class="chat-search">
                                 <div class="search-container">
                                     <i class="fas fa-search"></i>
@@ -214,6 +196,9 @@
                                 <div class="chat-actions">
                                     <button class="action-btn call-btn" onclick="makeCallFromChat()">
                                         <i class="fas fa-phone"></i>
+                                    </button>
+                                    <button class="action-btn video-btn" onclick="makeVideoCall()">
+                                        <i class="fas fa-video"></i>
                                     </button>
                                     <button class="action-btn menu-btn" onclick="toggleChatMenu()">
                                         <i class="fas fa-ellipsis-v"></i>
@@ -626,8 +611,6 @@
                                 </div>
                             </div>
 
-                            
-
                             <div class="settings-group">
                                 <h3>Privacidad</h3>
                                 <div class="setting-item">
@@ -667,7 +650,7 @@
             </nav>
         </div>
 
-
+        
 
         <!-- Loading Overlay -->
         <div class="loading-overlay hidden" id="loadingOverlay">
@@ -685,6 +668,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
