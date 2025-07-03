@@ -2269,14 +2269,6 @@ class EZTranslateApp {
             this.showAlert('Preparando descarga de APK...');
             await this.delay(1000);
 
-            // Crear datos básicos del APK
-            const apkData = {
-                name: 'BeDub',
-                packageName: 'com.bedub.app',
-                version: '1.0.0',
-                url: window.location.origin
-            };
-
             // Simular generación
             await this.delay(2000);
 
@@ -2296,8 +2288,6 @@ class EZTranslateApp {
         }
     }
 
-    
-
     downloadAPKFile() {
         try {
             // Crear archivo APK básico
@@ -2315,12 +2305,6 @@ class EZTranslateApp {
             document.body.removeChild(link);
             
             setTimeout(() => URL.revokeObjectURL(url), 100);
-            
-            // Cerrar modal si existe
-            const modal = document.querySelector('.modal');
-            if (modal) {
-                modal.remove();
-            }
             
             this.showAlert('¡APK descargado! Instala el archivo en tu dispositivo Android.');
         } catch (error) {
