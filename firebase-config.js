@@ -38,6 +38,15 @@ export const db = getFirestore(app);
 // Configurar reCAPTCHA para verificación SMS
 export function setupRecaptcha() {
     if (!window.recaptchaVerifier) {
+        // Crear contenedor para reCAPTCHA si no existe
+        let recaptchaContainer = document.getElementById('recaptcha-container');
+        if (!recaptchaContainer) {
+            recaptchaContainer = document.createElement('div');
+            recaptchaContainer.id = 'recaptcha-container';
+            recaptchaContainer.style.display = 'none';
+            document.body.appendChild(recaptchaContainer);
+        }
+
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
             'callback': (response) => {
@@ -45,16 +54,28 @@ export function setupRecaptcha() {
             },
             'expired-callback': () => {
                 console.log('reCAPTCHA expired');
+                // Limpiar y recrear el verificador
+                window.recaptchaVerifier = null;
             }
         });
     }
+    return window.recaptchaVerifier;
 }
 
 // Enviar código de verificación SMS
 export async function sendSMSVerification(phoneNumber) {
     try {
-        setupRecaptcha();
-        const appVerifier = window.recaptchaVerifier;
+        // Limpiar verificador anterior si existe
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
+            window.recaptchaVerifier = null;
+        }
+
+        const appVerifier = setupRecaptcha();
+        
+        // Renderizar el reCAPTCHA
+        await appVerifier.render();
+        
         const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         
         // Guardar para verificación posterior
@@ -62,13 +83,31 @@ export async function sendSMSVerification(phoneNumber) {
         
         return {
             success: true,
-            verificationId: confirmationResult.verificationId
+            verificationId: confirmationResult.verificationId,
+            message: 'Código enviado exitosamente'
         };
     } catch (error) {
         console.error('Error sending SMS:', error);
+        
+        // Limpiar verificador en caso de error
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
+            window.recaptchaVerifier = null;
+        }
+        
+        let errorMessage = 'Error al enviar código SMS';
+        
+        if (error.code === 'auth/invalid-phone-number') {
+            errorMessage = 'Número de teléfono inválido';
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = 'Demasiadas solicitudes. Intenta más tarde';
+        } else if (error.code === 'auth/captcha-check-failed') {
+            errorMessage = 'Error de verificación. Intenta de nuevo';
+        }
+        
         return {
             success: false,
-            error: error.message
+            error: errorMessage
         };
     }
 }

@@ -41,6 +41,26 @@ class EZTranslateApp {
         this.setupFirebaseAuth();
         this.loadMockData();
         this.requestNotificationPermission();
+        this.checkExistingAuth();
+    }
+
+    // Verificar si el usuario ya está autenticado
+    checkExistingAuth() {
+        const isAuthenticated = localStorage.getItem('userAuthenticated');
+        const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+        
+        if (isAuthenticated === 'true') {
+            // Usuario ya autenticado, ir directo a la app
+            document.getElementById('authContainer').classList.add('hidden');
+            
+            if (hasSeenTutorial === 'true') {
+                document.getElementById('mainApp').classList.remove('hidden');
+                this.appState = 'main';
+            } else {
+                document.getElementById('tutorialContainer').classList.remove('hidden');
+                this.appState = 'tutorial';
+            }
+        }
     }
     
     // Configurar autenticación de Firebase
@@ -226,12 +246,20 @@ class EZTranslateApp {
         const countryCode = document.getElementById('countryCode').value;
         const language = document.getElementById('preferredLanguage').value;
         
-        if (!phoneNumber) {
+        if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
             return;
         }
         
-        const fullPhone = countryCode + phoneNumber.replace(/\D/g, '');
+        // Limpiar y validar número
+        const cleanPhone = phoneNumber.replace(/\D/g, '');
+        if (cleanPhone.length < 10) {
+            this.showAlert('Número de teléfono demasiado corto');
+            return;
+        }
+        
+        const fullPhone = countryCode + cleanPhone;
+        console.log('Enviando SMS a:', fullPhone);
         
         this.showLoading('Enviando código...');
         
@@ -242,15 +270,18 @@ class EZTranslateApp {
             if (result.success) {
                 document.getElementById('phoneDisplay').textContent = fullPhone;
                 localStorage.setItem('userLanguage', language);
+                localStorage.setItem('userPhone', fullPhone);
                 this.hideLoading();
                 this.switchToVerification();
+                console.log('Código enviado exitosamente');
             } else {
                 this.hideLoading();
-                this.showAlert('Error al enviar código: ' + result.error);
+                this.showAlert(result.error || 'Error al enviar código');
+                console.error('Error en envío:', result.error);
             }
         } catch (error) {
             this.hideLoading();
-            this.showAlert('Error de conexión. Intenta de nuevo.');
+            this.showAlert('Error de conexión. Verifica tu internet e intenta de nuevo.');
             console.error('Error sending verification code:', error);
         }
     }
@@ -281,6 +312,11 @@ class EZTranslateApp {
             return;
         }
         
+        if (!window.confirmationResult) {
+            this.showAlert('Error: No hay código pendiente de verificación');
+            return;
+        }
+        
         this.showLoading('Verificando...');
         
         try {
@@ -290,19 +326,36 @@ class EZTranslateApp {
             if (result.success) {
                 this.firebaseUser = result.user;
                 
+                // Guardar información de sesión
+                localStorage.setItem('userAuthenticated', 'true');
+                localStorage.setItem('userId', result.user.uid);
+                
                 // Actualizar estado en línea
                 await updateUserOnlineStatus(result.user.uid, true);
                 
                 this.hideLoading();
-                this.startTutorial();
+                
+                // Si es primera vez, mostrar tutorial, si no ir directo a la app
+                const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+                if (hasSeenTutorial === 'true') {
+                    this.startApp();
+                } else {
+                    this.startTutorial();
+                }
             } else {
                 this.hideLoading();
                 this.showAlert('Código incorrecto. Intenta de nuevo.');
+                // Limpiar campos de código
+                codeInputs.forEach(input => input.value = '');
+                codeInputs[0].focus();
             }
         } catch (error) {
             this.hideLoading();
             this.showAlert('Error de verificación. Intenta de nuevo.');
             console.error('Error verifying code:', error);
+            // Limpiar campos de código
+            codeInputs.forEach(input => input.value = '');
+            codeInputs[0].focus();
         }
     }
     
@@ -369,11 +422,14 @@ class EZTranslateApp {
         document.getElementById('mainApp').classList.remove('hidden');
         this.appState = 'main';
         
-        // Header removed, no need to update user info there
+        // Marcar tutorial como visto
+        localStorage.setItem('hasSeenTutorial', 'true');
         
         // Show placeholder initially
         const chatMain = document.querySelector('.chat-main');
-        chatMain.classList.add('show-placeholder');
+        if (chatMain) {
+            chatMain.classList.add('show-placeholder');
+        }
         
         this.renderChatList();
     }
