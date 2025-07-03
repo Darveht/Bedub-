@@ -108,6 +108,40 @@ self.addEventListener('sync', (event) => {
 });
 
 async function sendPendingMessages() {
-  // Implementar lógica para enviar mensajes pendientes
-  console.log('Enviando mensajes pendientes...');
+  try {
+    // Obtener mensajes pendientes del IndexedDB
+    const pendingMessages = await getPendingMessages();
+    
+    for (const message of pendingMessages) {
+      try {
+        // Intentar enviar cada mensaje
+        const response = await fetch('/api/send-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(message)
+        });
+        
+        if (response.ok) {
+          // Marcar mensaje como enviado
+          await markMessageAsSent(message.id);
+        }
+      } catch (error) {
+        console.error('Error enviando mensaje:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error en background sync:', error);
+  }
+}
+
+async function getPendingMessages() {
+  // Implementar lógica para obtener mensajes pendientes
+  return [];
+}
+
+async function markMessageAsSent(messageId) {
+  // Implementar lógica para marcar mensaje como enviado
+  console.log('Mensaje enviado:', messageId);
 }

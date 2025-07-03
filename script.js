@@ -1,3 +1,43 @@
+
+// Inicializar soporte móvil mejorado
+initializeMobileSupport() {
+    // Prevenir zoom al hacer doble tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (event) => {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+
+    // Mejorar respuesta táctil
+    document.addEventListener('touchstart', (event) => {
+        // Agregar clase de toque activo
+        if (event.target.classList.contains('nav-item') || 
+            event.target.classList.contains('auth-btn') ||
+            event.target.classList.contains('voice-record-main-btn')) {
+            event.target.classList.add('touch-active');
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (event) => {
+        // Remover clase de toque activo
+        setTimeout(() => {
+            if (event.target.classList.contains('touch-active')) {
+                event.target.classList.remove('touch-active');
+            }
+        }, 150);
+    }, { passive: true });
+
+    // Configurar viewport para móviles
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+}
+
+
 // Aplicación EZTranslate sin dependencias externas
 class EZTranslateApp {
     constructor() {
@@ -2032,6 +2072,14 @@ class EZTranslateApp {
                         console.log('SW registration failed: ', error);
                     });
             });
+        }
+
+        // Detectar dispositivos móviles
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Configurar eventos táctiles para móviles
+        if (this.isMobile) {
+            this.initializeMobileSupport();
         }
 
         // Configurar evento de instalación PWA
