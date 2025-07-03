@@ -1974,11 +1974,7 @@ class EZTranslateApp {
         this.showAlert('Menú de chat próximamente');
     }
 
-    makeVideoCall() {
-        if (this.currentChat) {
-            this.showAlert('Iniciando videollamada...');
-        }
-    }
+    
 }
 
 // Voice recording functionality
@@ -2299,9 +2295,7 @@ function makeCall() {
     app.makeCall();
 }
 
-function makeVideoCall() {
-    app.makeVideoCall();
-}
+
 
 function makeCallFromChat() {
     app.makeCallFromChat();

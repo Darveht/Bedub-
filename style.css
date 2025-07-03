@@ -705,8 +705,8 @@ body {
 }
 
 .action-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: #f8f9fa;
     border: none;
@@ -716,7 +716,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    font-size: 16px;
+    font-size: 14px;
     position: relative;
     overflow: hidden;
 }
@@ -746,25 +746,13 @@ body {
 .action-btn.call-btn {
     background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
     color: #000;
-    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
 }
 
 .action-btn.call-btn:hover {
     background: linear-gradient(135deg, #00b894 0%, #009973 100%);
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 212, 170, 0.4);
-}
-
-.action-btn.video-btn {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-}
-
-.action-btn.video-btn:hover {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
 }
 
 .messages-area {
