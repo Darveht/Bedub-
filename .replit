@@ -1,5 +1,5 @@
 modules = ["nodejs-20", "web"]
-run = "node index.js"
+run = "node index.html"
 
 [nix]
 channel = "stable-24_05"
@@ -17,4 +17,4 @@ task = "shell.exec"
 args = "npx http-server . -p 5000 -a 0.0.0.0"
 
 [deployment]
-run = ["sh", "-c", "node index.js"]
+run = ["sh", "-c", "node index.html"]
