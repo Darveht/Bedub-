@@ -1,3 +1,15 @@
+// Importar módulos de Firebase y WebSocket
+import { 
+    sendSMSVerification, 
+    verifySMSCode, 
+    onAuthChange,
+    updateUserOnlineStatus,
+    sendMessage,
+    listenToMessages,
+    listenToUserChats
+} from './firebase-config.js';
+import { websocketClient } from './websocket-client.js';
+
 class EZTranslateApp {
     constructor() {
         this.currentUser = null;
@@ -14,6 +26,11 @@ class EZTranslateApp {
         this.isVoiceRecording = false;
         this.speechRecognition = null;
         
+        // Firebase y WebSocket
+        this.firebaseUser = null;
+        this.messageListeners = new Map();
+        this.typingTimeout = null;
+        
         // Initialize app
         this.initializeApp();
     }
@@ -21,7 +38,69 @@ class EZTranslateApp {
     initializeApp() {
         this.setupEventListeners();
         this.setupVerificationInput();
+        this.setupFirebaseAuth();
         this.loadMockData();
+        this.requestNotificationPermission();
+    }
+    
+    // Configurar autenticación de Firebase
+    setupFirebaseAuth() {
+        onAuthChange((user) => {
+            if (user) {
+                this.firebaseUser = user;
+                this.currentUser = {
+                    uid: user.uid,
+                    phone: user.phoneNumber,
+                    name: user.displayName || 'Usuario',
+                    language: localStorage.getItem('userLanguage') || 'es'
+                };
+                
+                // Conectar WebSocket
+                this.connectWebSocket();
+                
+                // Escuchar chats del usuario
+                this.listenToUserChats();
+                
+                console.log('Usuario autenticado:', this.currentUser);
+            } else {
+                this.firebaseUser = null;
+                this.currentUser = null;
+                this.disconnectWebSocket();
+                console.log('Usuario no autenticado');
+            }
+        });
+    }
+    
+    // Conectar WebSocket
+    connectWebSocket() {
+        if (this.firebaseUser) {
+            this.firebaseUser.getIdToken().then((token) => {
+                websocketClient.connect(this.firebaseUser.uid, token);
+                
+                // Configurar callbacks globales
+                websocketClient.socket.on('new_message', (data) => {
+                    this.handleNewWebSocketMessage(data);
+                });
+                
+                websocketClient.socket.on('user_status_update', (data) => {
+                    this.handleUserStatusUpdate(data);
+                });
+            });
+        }
+    }
+    
+    // Desconectar WebSocket
+    disconnectWebSocket() {
+        websocketClient.disconnect();
+    }
+    
+    // Solicitar permisos de notificación
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then((permission) => {
+                console.log('Notification permission:', permission);
+            });
+        }
     }
     
     setupEventListeners() {
@@ -152,16 +231,28 @@ class EZTranslateApp {
             return;
         }
         
+        const fullPhone = countryCode + phoneNumber.replace(/\D/g, '');
+        
         this.showLoading('Enviando código...');
         
-        // Simulate API call
-        await this.delay(2000);
-        
-        const fullPhone = countryCode + phoneNumber.replace(/\D/g, '');
-        document.getElementById('phoneDisplay').textContent = fullPhone;
-        
-        this.hideLoading();
-        this.switchToVerification();
+        try {
+            // Enviar código SMS con Firebase
+            const result = await sendSMSVerification(fullPhone);
+            
+            if (result.success) {
+                document.getElementById('phoneDisplay').textContent = fullPhone;
+                localStorage.setItem('userLanguage', language);
+                this.hideLoading();
+                this.switchToVerification();
+            } else {
+                this.hideLoading();
+                this.showAlert('Error al enviar código: ' + result.error);
+            }
+        } catch (error) {
+            this.hideLoading();
+            this.showAlert('Error de conexión. Intenta de nuevo.');
+            console.error('Error sending verification code:', error);
+        }
     }
     
     switchToVerification() {
@@ -192,18 +283,27 @@ class EZTranslateApp {
         
         this.showLoading('Verificando...');
         
-        // Simulate verification
-        await this.delay(1500);
-        
-        // Create user object
-        this.currentUser = {
-            phone: document.getElementById('phoneDisplay').textContent,
-            language: document.getElementById('preferredLanguage').value,
-            name: 'Usuario'
-        };
-        
-        this.hideLoading();
-        this.startTutorial();
+        try {
+            // Verificar código con Firebase
+            const result = await verifySMSCode(code);
+            
+            if (result.success) {
+                this.firebaseUser = result.user;
+                
+                // Actualizar estado en línea
+                await updateUserOnlineStatus(result.user.uid, true);
+                
+                this.hideLoading();
+                this.startTutorial();
+            } else {
+                this.hideLoading();
+                this.showAlert('Código incorrecto. Intenta de nuevo.');
+            }
+        } catch (error) {
+            this.hideLoading();
+            this.showAlert('Error de verificación. Intenta de nuevo.');
+            console.error('Error verifying code:', error);
+        }
     }
     
     async resendCode() {
