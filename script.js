@@ -596,54 +596,155 @@ class EZTranslateApp {
         return `[${languageNames[toLang] || toLang.toUpperCase()}] ${text}`;
     }
     
-    // ============ UTILITY FUNCTIONS ============
-    openAddContact() {
-        document.getElementById('addContactModal').classList.remove('hidden');
+    // ============ NEW CHAT FUNCTIONS ============
+    openNewChatSection() {
+        this.switchSection('newChat');
+        this.loadPhoneContacts();
+        this.setupContactSearch();
     }
     
-    closeAddContact() {
-        document.getElementById('addContactModal').classList.add('hidden');
-        document.getElementById('contactPhone').value = '';
-        document.getElementById('contactResult').classList.add('hidden');
+    async loadPhoneContacts() {
+        const contactsList = document.getElementById('phoneContactsList');
+        
+        // Show loading state
+        contactsList.innerHTML = `
+            <div class="contacts-loading">
+                <i class="fas fa-spinner"></i>
+                <span>Cargando contactos...</span>
+            </div>
+        `;
+        
+        try {
+            // Try to access contacts API (this is limited in web browsers)
+            if ('contacts' in navigator && 'ContactsManager' in window) {
+                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+                this.renderPhoneContacts(contacts);
+            } else {
+                // Fallback to mock contacts for demo purposes
+                await this.delay(1000);
+                this.renderMockContacts();
+            }
+        } catch (error) {
+            console.log('Contacts API not available, using mock data');
+            await this.delay(1000);
+            this.renderMockContacts();
+        }
     }
     
-    async searchContact() {
-        const phone = document.getElementById('contactPhone').value.trim();
-        if (!phone) {
-            this.showAlert('Por favor ingresa un número de teléfono');
+    renderMockContacts() {
+        const mockContacts = [
+            { name: 'Ana García', phone: '+52 555 123 4567', avatar: 'A' },
+            { name: 'Carlos Rodríguez', phone: '+34 612 345 678', avatar: 'C' },
+            { name: 'María López', phone: '+1 555 987 6543', avatar: 'M' },
+            { name: 'Juan Pérez', phone: '+52 55 8765 4321', avatar: 'J' },
+            { name: 'Laura Martín', phone: '+34 634 567 890', avatar: 'L' },
+            { name: 'David Wilson', phone: '+1 555 246 8135', avatar: 'D' },
+            { name: 'Sofia Herrera', phone: '+52 55 1357 9246', avatar: 'S' },
+            { name: 'Roberto Silva', phone: '+55 11 9876 5432', avatar: 'R' },
+            { name: 'Elena Jiménez', phone: '+34 645 123 789', avatar: 'E' },
+            { name: 'Michael Johnson', phone: '+1 555 369 2580', avatar: 'M' }
+        ];
+        
+        this.renderPhoneContacts(mockContacts);
+    }
+    
+    renderPhoneContacts(contacts) {
+        const contactsList = document.getElementById('phoneContactsList');
+        
+        if (!contacts || contacts.length === 0) {
+            contactsList.innerHTML = `
+                <div class="contacts-empty">
+                    <i class="fas fa-address-book"></i>
+                    <h4>No hay contactos disponibles</h4>
+                    <p>No se pudieron cargar los contactos del teléfono</p>
+                </div>
+            `;
             return;
         }
         
-        this.showLoading('Buscando contacto...');
-        
-        // Simulate search
-        await this.delay(1500);
-        
-        this.hideLoading();
-        
-        // Mock search result
-        if (phone === '1234567890' || phone === '+1234567890') {
-            const resultDiv = document.getElementById('contactResult');
-            resultDiv.innerHTML = `
-                <div class="contact-found">
-                    <div class="contact-avatar">👨</div>
-                    <div class="contact-info">
-                        <div class="contact-name">John Smith</div>
-                        <div class="contact-language">🇺🇸 English</div>
-                    </div>
-                    <button class="add-btn" onclick="app.addContact('${phone}')">Agregar</button>
+        contactsList.innerHTML = contacts.map(contact => `
+            <div class="contact-item" data-name="${contact.name.toLowerCase()}" data-phone="${contact.phone}">
+                <div class="contact-avatar-img">
+                    ${contact.avatar || contact.name.charAt(0).toUpperCase()}
                 </div>
-            `;
-            resultDiv.classList.remove('hidden');
-        } else {
-            this.showAlert('Usuario no encontrado en BeDub');
-        }
+                <div class="contact-info">
+                    <div class="contact-name">${contact.name}</div>
+                    <div class="contact-phone">${contact.phone}</div>
+                </div>
+                <div class="contact-actions">
+                    <button class="contact-action-btn call-contact-btn" onclick="app.callContact('${contact.phone}')">
+                        <i class="fas fa-phone"></i>
+                    </button>
+                    <button class="contact-action-btn message-contact-btn" onclick="app.startChatWithContact('${contact.name}', '${contact.phone}')">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
     }
     
-    addContact(phone) {
-        this.showAlert('Contacto agregado exitosamente');
-        this.closeAddContact();
+    setupContactSearch() {
+        const searchInput = document.getElementById('contactSearchInput');
+        if (!searchInput) return;
+        
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            this.filterContacts(searchTerm);
+        });
+    }
+    
+    filterContacts(searchTerm) {
+        const contactItems = document.querySelectorAll('.contact-item');
+        
+        contactItems.forEach(item => {
+            const name = item.dataset.name || '';
+            const phone = item.dataset.phone || '';
+            
+            const matchesSearch = name.includes(searchTerm) || 
+                                phone.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, ''));
+            
+            if (matchesSearch) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    callContact(phone) {
+        this.showAlert(`Llamando a ${phone}...`);
+        this.switchSection('calls');
+        this.showDialer();
+        document.getElementById('dialNumber').value = phone.replace(/\s+/g, '');
+    }
+    
+    startChatWithContact(name, phone) {
+        // Create or find existing contact
+        if (!this.contacts.has(phone)) {
+            this.contacts.set(phone, {
+                name: name,
+                phone: phone,
+                language: 'es', // Default language
+                avatar: name.charAt(0).toUpperCase(),
+                status: 'offline'
+            });
+        }
+        
+        // Initialize empty messages array if needed
+        if (!this.messages.has(phone)) {
+            this.messages.set(phone, []);
+        }
+        
+        // Switch to chats section and open the chat
+        this.switchSection('chats');
         this.renderChatList();
+        
+        // Small delay to ensure UI is ready
+        setTimeout(() => {
+            this.openChat(phone);
+        }, 100);
+        
+        this.showAlert(`Chat iniciado con ${name}`);
     }
     
     openSettings() {
@@ -746,9 +847,9 @@ class EZTranslateApp {
             }
         });
         
-        // Handle header visibility for translator section
+        // Handle header visibility for translator and newChat sections
         const mainHeader = document.querySelector('.main-header');
-        if (section === 'translator') {
+        if (section === 'translator' || section === 'newChat') {
             mainHeader.style.display = 'none';
         } else {
             mainHeader.style.display = 'flex';
@@ -1419,17 +1520,7 @@ function startApp() {
     app.startApp();
 }
 
-function openAddContact() {
-    app.openAddContact();
-}
 
-function closeAddContact() {
-    app.closeAddContact();
-}
-
-function searchContact() {
-    app.searchContact();
-}
 
 function openSettings() {
     app.openSettings();

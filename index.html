@@ -166,9 +166,6 @@
                         <aside class="chat-sidebar">
                             <div class="sidebar-header">
                                 <h3>Chats</h3>
-                                <button class="add-contact-btn" onclick="openAddContact()">
-                                    <i class="fas fa-plus"></i>
-                                </button>
                             </div>
 
                             <div class="search-container">
@@ -179,6 +176,16 @@
                             <div class="chat-list" id="chatList">
                                 <!-- Chat items will be populated here -->
                             </div>
+
+                            <div class="new-chat-container">
+                                <button class="new-chat-btn" onclick="app.openNewChatSection()">
+                                    <div class="new-chat-icon">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <span>Chat Nuevo</span>
+                                    <div class="new-chat-animation"></div>
+                                </button>
+                            </div>
                         </aside>
 
                         <!-- Chat Area -->
@@ -187,9 +194,9 @@
                                 <i class="fas fa-comments"></i>
                                 <h3>No tienes chats aún</h3>
                                 <p>Agrega un contacto para comenzar a chatear</p>
-                                <button class="start-chat-btn" onclick="openAddContact()">
+                                <button class="start-chat-btn" onclick="app.openNewChatSection()">
                                     <i class="fas fa-plus"></i>
-                                    Agregar Contacto
+                                    Nuevo Chat
                                 </button>
                             </div>
 
@@ -477,6 +484,34 @@
                     </div>
                 </div>
 
+                <!-- New Chat Section -->
+                <div class="section-container hidden" id="newChatSection">
+                    <div class="new-chat-layout">
+                        <div class="new-chat-header">
+                            <button class="back-btn" onclick="app.switchSection('chats')">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <h2>Nuevo Chat</h2>
+                        </div>
+
+                        <div class="contact-search-container">
+                            <div class="search-bar">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="contactSearchInput" placeholder="Buscar por nombre o número de teléfono..." class="contact-search-input">
+                            </div>
+                        </div>
+
+                        <div class="contacts-list-container">
+                            <div class="contacts-section">
+                                <h3>Contactos</h3>
+                                <div class="contacts-list" id="phoneContactsList">
+                                    <!-- Phone contacts will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Settings Section -->
                 <div class="section-container hidden" id="settingsSection">
                     <div class="settings-layout">
@@ -605,33 +640,7 @@
             </nav>
         </div>
 
-        <!-- Add Contact Modal -->
-        <div class="modal-overlay hidden" id="addContactModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>Agregar Contacto</h3>
-                    <button class="modal-close" onclick="closeAddContact()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-content">
-                    <div class="add-contact-form">
-                        <div class="phone-search-container">
-                            <div class="search-phone-input">
-                                <span class="plus-icon">+</span>
-                                <input type="tel" id="contactPhone" placeholder="Número de teléfono del contacto">
-                                <button class="search-contact-btn" onclick="searchContact()">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="contact-result hidden" id="contactResult">
-                            <!-- Contact search result will appear here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
         <!-- Loading Overlay -->
         <div class="loading-overlay hidden" id="loadingOverlay">
