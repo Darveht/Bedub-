@@ -1885,6 +1885,95 @@ class EZTranslateApp {
         }
     }
 
+    makeCallFromChat() {
+        if (this.currentActiveChat) {
+            const chat = this.chatConversations.get(this.currentActiveChat);
+            if (chat) {
+                this.playCallInitSound();
+                this.startCallFromChat(chat.name, chat.phone);
+            }
+        }
+    }
+
+    startCallFromChat(contactName, contactPhone) {
+        // Show active call screen
+        const callScreen = document.getElementById('activeCallScreen');
+        const callContactName = document.getElementById('callContactName');
+        const callContactNumber = document.getElementById('callContactNumber');
+        const callStatus = document.getElementById('callStatus');
+
+        callContactName.textContent = contactName;
+        callContactNumber.textContent = contactPhone;
+        callStatus.textContent = 'Llamando...';
+
+        callScreen.classList.add('active');
+        callScreen.classList.remove('hidden');
+
+        // Play enhanced ringtone
+        this.playEnhancedRingtone();
+
+        // Simulate call connection with realistic timing
+        setTimeout(() => {
+            callStatus.textContent = 'Conectando...';
+            this.playCallConnectingSound();
+        }, 2000);
+
+        setTimeout(() => {
+            callStatus.textContent = 'Llamada en curso...';
+            this.stopRingtone();
+            this.playCallConnectedSound();
+        }, 4000);
+    }
+
+    playCallInitSound() {
+        if (!this.audioContext) return;
+
+        // Play modern call initiation sound
+        const frequencies = [800, 900, 1000];
+        frequencies.forEach((freq, index) => {
+            setTimeout(() => {
+                this.playTone(freq, 0.15, 0.2);
+            }, index * 100);
+        });
+    }
+
+    playEnhancedRingtone() {
+        if (!this.audioContext) return;
+
+        this.ringtoneInterval = setInterval(() => {
+            // Play modern ringtone pattern (like iPhone)
+            const melody = [
+                { freq: 659, duration: 0.3 }, // E5
+                { freq: 698, duration: 0.3 }, // F5
+                { freq: 784, duration: 0.6 }, // G5
+                { freq: 659, duration: 0.3 }, // E5
+                { freq: 523, duration: 0.6 }  // C5
+            ];
+
+            melody.forEach((note, index) => {
+                setTimeout(() => {
+                    this.playTone(note.freq, note.duration, 0.25);
+                }, index * 200);
+            });
+        }, 3000);
+    }
+
+    playCallConnectingSound() {
+        if (!this.audioContext) return;
+
+        // Play connecting sound (subtle beeps)
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                this.playTone(1000, 0.1, 0.15);
+            }, i * 300);
+        }
+    }
+
+    toggleChatMenu() {
+        // Future implementation for chat menu
+        this.showAlert('Menú de chat próximamente');
+    }
+
     makeVideoCall() {
         if (this.currentChat) {
             this.showAlert('Iniciando videollamada...');
@@ -2212,4 +2301,12 @@ function makeCall() {
 
 function makeVideoCall() {
     app.makeVideoCall();
+}
+
+function makeCallFromChat() {
+    app.makeCallFromChat();
+}
+
+function toggleChatMenu() {
+    app.toggleChatMenu();
 }
