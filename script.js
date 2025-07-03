@@ -792,8 +792,8 @@ class EZTranslateApp {
     
     async startVoiceRecording() {
         try {
-            // Check for microphone permission
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Check for microphone permission first
+            await navigator.mediaDevices.getUserMedia({ audio: true });
             
             this.isVoiceRecording = true;
             this.updateRecordingUI(true);
@@ -803,8 +803,8 @@ class EZTranslateApp {
             this.startMicrophoneAnimation();
             
             // Clear previous content
-            document.getElementById('originalTextContent').textContent = '';
-            document.getElementById('translatedTextContent').textContent = '';
+            document.getElementById('originalTextContent').textContent = 'Escuchando...';
+            document.getElementById('translatedTextContent').textContent = 'Esperando traducción...';
             
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -813,8 +813,14 @@ class EZTranslateApp {
                 
                 const fromLang = document.getElementById('voiceFromLanguage').value;
                 this.speechRecognition.lang = fromLang;
-                this.speechRecognition.continuous = true;
+                this.speechRecognition.continuous = false;
                 this.speechRecognition.interimResults = true;
+                this.speechRecognition.maxAlternatives = 1;
+                
+                this.speechRecognition.onstart = () => {
+                    console.log('Speech recognition started');
+                    this.updateRecordingStatus('🎤 Habla ahora...', 'recording');
+                };
                 
                 this.speechRecognition.onresult = async (event) => {
                     let interimTranscript = '';
@@ -831,42 +837,68 @@ class EZTranslateApp {
                     
                     // Update original text in real time
                     const originalTextEl = document.getElementById('originalTextContent');
-                    originalTextEl.innerHTML = finalTranscript + '<span style="opacity: 0.6; font-style: italic;">' + interimTranscript + '</span>';
+                    const displayText = finalTranscript || interimTranscript;
                     
-                    // Translate in real time if we have final text
-                    if (finalTranscript.trim()) {
-                        this.updateRecordingStatus('🔄 Traduciendo...', 'processing');
-                        await this.translateVoiceText(finalTranscript.trim());
-                        this.updateRecordingStatus('🎤 Escuchando...', 'recording');
+                    if (displayText.trim()) {
+                        originalTextEl.innerHTML = finalTranscript + 
+                            (interimTranscript ? '<span style="opacity: 0.6; font-style: italic;">' + interimTranscript + '</span>' : '');
+                        
+                        // Translate when we have final text
+                        if (finalTranscript.trim()) {
+                            this.updateRecordingStatus('🔄 Traduciendo...', 'processing');
+                            await this.translateVoiceText(finalTranscript.trim());
+                        }
                     }
                 };
                 
                 this.speechRecognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
+                    if (event.error === 'not-allowed') {
+                        this.showAlert('Por favor permite el acceso al micrófono en tu navegador.');
+                    } else if (event.error === 'no-speech') {
+                        this.updateRecordingStatus('❌ No se detectó voz', 'ready');
+                        setTimeout(() => {
+                            if (this.isVoiceRecording) {
+                                this.speechRecognition.start();
+                            }
+                        }, 1000);
+                        return;
+                    } else {
+                        this.showAlert('Error en el reconocimiento de voz: ' + event.error);
+                    }
                     this.stopVoiceRecording();
-                    this.showAlert('Error en el reconocimiento de voz. Intenta de nuevo.');
                 };
                 
                 this.speechRecognition.onend = () => {
+                    console.log('Speech recognition ended');
                     if (this.isVoiceRecording) {
                         // Restart recognition if still recording
-                        try {
-                            this.speechRecognition.start();
-                        } catch (e) {
-                            this.stopVoiceRecording();
-                        }
+                        setTimeout(() => {
+                            if (this.isVoiceRecording) {
+                                try {
+                                    this.speechRecognition.start();
+                                } catch (e) {
+                                    console.error('Error restarting recognition:', e);
+                                    this.stopVoiceRecording();
+                                }
+                            }
+                        }, 100);
                     }
                 };
                 
                 this.speechRecognition.start();
             } else {
-                this.showAlert('El reconocimiento de voz no está disponible en este navegador');
+                this.showAlert('El reconocimiento de voz no está disponible en este navegador. Usa Chrome o Edge.');
                 this.stopVoiceRecording();
             }
             
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            this.showAlert('No se pudo acceder al micrófono. Verifica los permisos.');
+            if (error.name === 'NotAllowedError') {
+                this.showAlert('Por favor permite el acceso al micrófono en la configuración de tu navegador.');
+            } else {
+                this.showAlert('No se pudo acceder al micrófono. Verifica los permisos.');
+            }
             this.stopVoiceRecording();
         }
     }
@@ -892,26 +924,20 @@ class EZTranslateApp {
     updateRecordingUI(isRecording) {
         const recordBtn = document.getElementById('mainRecordBtn');
         const recordingVisual = document.getElementById('recordingVisual');
-        const audioWaves = recordingVisual.querySelector('.audio-waves');
+        const audioWaves = recordingVisual ? recordingVisual.querySelector('.audio-waves') : null;
         
         if (isRecording) {
             recordBtn.classList.add('recording');
-            recordBtn.querySelector('.record-text').textContent = '🔴 Grabando...';
-            recordBtn.querySelector('.mic-icon i').className = 'fas fa-stop';
-            recordingVisual.classList.add('active');
-            audioWaves.classList.add('active');
-            
-            // Add pulsing effect to button
-            recordBtn.style.animation = 'recordingPulse 1.5s ease-in-out infinite';
+            recordBtn.querySelector('.record-text').textContent = 'Grabando...';
+            recordBtn.querySelector('.mic-icon i').className = 'fas fa-stop-circle';
+            if (recordingVisual) recordingVisual.classList.add('active');
+            if (audioWaves) audioWaves.classList.add('active');
         } else {
             recordBtn.classList.remove('recording');
             recordBtn.querySelector('.record-text').textContent = 'Toca para hablar';
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-microphone';
-            recordingVisual.classList.remove('active');
-            audioWaves.classList.remove('active');
-            
-            // Remove animation
-            recordBtn.style.animation = '';
+            if (recordingVisual) recordingVisual.classList.remove('active');
+            if (audioWaves) audioWaves.classList.remove('active');
         }
     }
     
