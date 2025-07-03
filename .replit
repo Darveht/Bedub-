@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web"]
+modules = ["web", "nodejs-20"]
 run = "npx http-server . -p 5000 -a 0.0.0.0"
 
 [nix]
