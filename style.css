@@ -1122,38 +1122,73 @@ body {
     letter-spacing: 1px;
 }
 
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
 .voice-language-select {
     width: 100%;
-    padding: 16px 20px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 50px 20px 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
     color: #fff;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     appearance: none;
-    text-align: center;
-    backdrop-filter: blur(10px);
+    text-align: left;
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .voice-language-select:hover {
-    border-color: rgba(0, 212, 170, 0.5);
-    background: rgba(0, 212, 170, 0.1);
+    border-color: rgba(0, 212, 170, 0.6);
+    background: linear-gradient(145deg, rgba(0, 212, 170, 0.15), rgba(0, 212, 170, 0.1));
     transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(0, 212, 170, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .voice-language-select:focus {
     border-color: #00d4aa;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.2);
+    box-shadow: 
+        0 0 0 3px rgba(0, 212, 170, 0.3),
+        0 12px 40px rgba(0, 212, 170, 0.2);
 }
 
 .voice-language-select option {
     background: #111;
     color: #fff;
-    padding: 12px;
+    padding: 16px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.voice-language-select:hover + .select-arrow {
+    color: #00d4aa;
+}
+
+.voice-language-select:focus + .select-arrow {
+    color: #00d4aa;
+    transform: translateY(-50%) rotate(180deg);
 }
 
 .voice-swap-btn {
@@ -1744,72 +1779,104 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 32px;
+    gap: 24px;
+    padding: 20px;
 }
 
 .dial-display {
     width: 100%;
-    max-width: 300px;
+    max-width: 350px;
+    margin-bottom: 20px;
 }
 
 .dial-input {
     width: 100%;
-    padding: 16px 24px;
+    padding: 20px 24px;
     border: 2px solid #e5e5e5;
-    border-radius: 12px;
-    font-size: 24px;
+    border-radius: 16px;
+    font-size: 28px;
     text-align: center;
     outline: none;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+    letter-spacing: 2px;
 }
 
 .dial-input:focus {
-    border-color: #000;
+    border-color: #00d4aa;
+    box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
 }
 
 .dial-pad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    max-width: 300px;
+    gap: 20px;
+    max-width: 350px;
+    width: 100%;
 }
 
 .dial-btn {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     background: #fff;
     border: 2px solid #e5e5e5;
-    font-size: 24px;
-    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     color: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dial-btn:hover {
-    background: #f0f0f0;
-    border-color: #000;
+    background: #f8f9fa;
+    border-color: #00d4aa;
     transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 212, 170, 0.2);
+}
+
+.dial-btn:active {
+    transform: scale(0.95);
+}
+
+.dial-btn .digit {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.dial-btn .letters {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    margin-top: 2px;
+    letter-spacing: 1px;
 }
 
 .dial-actions {
     display: flex;
-    gap: 32px;
+    gap: 40px;
     align-items: center;
+    margin-top: 20px;
 }
 
 .delete-btn, .call-btn {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 24px;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .delete-btn {
@@ -1820,6 +1887,7 @@ body {
 .delete-btn:hover {
     background: #ff3838;
     transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
 }
 
 .call-btn {
@@ -1829,6 +1897,190 @@ body {
 
 .call-btn:hover {
     background: #00b894;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 212, 170, 0.4);
+}
+
+/* Active Call Screen */
+.active-call-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.active-call-screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.call-screen-content {
+    text-align: center;
+    color: #fff;
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+}
+
+.call-info {
+    margin-bottom: 60px;
+}
+
+.call-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 48px;
+    color: #000;
+    box-shadow: 0 20px 60px rgba(0, 212, 170, 0.4);
+}
+
+.call-details h3 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.call-details .call-number {
+    font-size: 18px;
+    color: #999;
+    margin-bottom: 16px;
+}
+
+.call-details .call-status {
+    font-size: 16px;
+    color: #00d4aa;
+    font-weight: 600;
+}
+
+.call-animation {
+    margin-bottom: 80px;
+}
+
+.call-waves {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    height: 60px;
+}
+
+.call-waves .wave {
+    width: 4px;
+    background: linear-gradient(to top, #00d4aa, #00b894);
+    border-radius: 2px;
+    animation: callWave 1.5s ease-in-out infinite;
+}
+
+.call-waves .wave:nth-child(1) { height: 20px; animation-delay: 0s; }
+.call-waves .wave:nth-child(2) { height: 40px; animation-delay: 0.1s; }
+.call-waves .wave:nth-child(3) { height: 60px; animation-delay: 0.2s; }
+.call-waves .wave:nth-child(4) { height: 40px; animation-delay: 0.3s; }
+.call-waves .wave:nth-child(5) { height: 20px; animation-delay: 0.4s; }
+
+@keyframes callWave {
+    0%, 100% { transform: scaleY(0.5); opacity: 0.7; }
+    50% { transform: scaleY(1.2); opacity: 1; }
+}
+
+.call-controls {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.call-control-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.mute-btn, .speaker-btn, .keypad-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mute-btn:hover, .speaker-btn:hover, .keypad-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.mute-btn.active {
+    background: #ff4757;
+    color: #fff;
+}
+
+.speaker-btn.active {
+    background: #00d4aa;
+    color: #000;
+}
+
+.end-call-btn {
+    background: #ff4757;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(255, 71, 87, 0.4);
+}
+
+.end-call-btn:hover {
+    background: #ff3838;
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(255, 71, 87, 0.5);
+}
+
+.call-keypad {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.keypad-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.keypad-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
     transform: scale(1.1);
 }
 

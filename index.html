@@ -253,20 +253,25 @@
                             <div class="voice-language-selector">
                                 <div class="language-card from-language">
                                     <div class="language-label">Hablas en</div>
-                                    <select id="voiceFromLanguage" class="voice-language-select">
-                                        <option value="es-ES">🇪🇸 Español</option>
-                                        <option value="en-US">🇺🇸 English</option>
-                                        <option value="fr-FR">🇫🇷 Français</option>
-                                        <option value="de-DE">🇩🇪 Deutsch</option>
-                                        <option value="it-IT">🇮🇹 Italiano</option>
-                                        <option value="pt-BR">🇧🇷 Português</option>
-                                        <option value="zh-CN">🇨🇳 中文</option>
-                                        <option value="ja-JP">🇯🇵 日本語</option>
-                                        <option value="ko-KR">🇰🇷 한국어</option>
-                                        <option value="ar-SA">🇸🇦 العربية</option>
-                                        <option value="ru-RU">🇷🇺 Русский</option>
-                                        <option value="hi-IN">🇮🇳 हिन्दी</option>
-                                    </select>
+                                    <div class="custom-select">
+                                        <select id="voiceFromLanguage" class="voice-language-select">
+                                            <option value="es-ES">🇪🇸 Español</option>
+                                            <option value="en-US">🇺🇸 English</option>
+                                            <option value="fr-FR">🇫🇷 Français</option>
+                                            <option value="de-DE">🇩🇪 Deutsch</option>
+                                            <option value="it-IT">🇮🇹 Italiano</option>
+                                            <option value="pt-BR">🇧🇷 Português</option>
+                                            <option value="zh-CN">🇨🇳 中文</option>
+                                            <option value="ja-JP">🇯🇵 日本語</option>
+                                            <option value="ko-KR">🇰🇷 한국어</option>
+                                            <option value="ar-SA">🇸🇦 العربية</option>
+                                            <option value="ru-RU">🇷🇺 Русский</option>
+                                            <option value="hi-IN">🇮🇳 हिन्दी</option>
+                                        </select>
+                                        <div class="select-arrow">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button class="voice-swap-btn" onclick="swapVoiceLanguages()" title="Intercambiar idiomas">
@@ -277,20 +282,25 @@
 
                                 <div class="language-card to-language">
                                     <div class="language-label">Escuchas en</div>
-                                    <select id="voiceToLanguage" class="voice-language-select">
-                                        <option value="en-US">🇺🇸 English</option>
-                                        <option value="es-ES">🇪🇸 Español</option>
-                                        <option value="fr-FR">🇫🇷 Français</option>
-                                        <option value="de-DE">🇩🇪 Deutsch</option>
-                                        <option value="it-IT">🇮🇹 Italiano</option>
-                                        <option value="pt-BR">🇧🇷 Português</option>
-                                        <option value="zh-CN">🇨🇳 中文</option>
-                                        <option value="ja-JP">🇯🇵 日本語</option>
-                                        <option value="ko-KR">🇰🇷 한국어</option>
-                                        <option value="ar-SA">🇸🇦 العربية</option>
-                                        <option value="ru-RU">🇷🇺 Русский</option>
-                                        <option value="hi-IN">🇮🇳 हिन्दी</option>
-                                    </select>
+                                    <div class="custom-select">
+                                        <select id="voiceToLanguage" class="voice-language-select">
+                                            <option value="en-US">🇺🇸 English</option>
+                                            <option value="es-ES">🇪🇸 Español</option>
+                                            <option value="fr-FR">🇫🇷 Français</option>
+                                            <option value="de-DE">🇩🇪 Deutsch</option>
+                                            <option value="it-IT">🇮🇹 Italiano</option>
+                                            <option value="pt-BR">🇧🇷 Português</option>
+                                            <option value="zh-CN">🇨🇳 中文</option>
+                                            <option value="ja-JP">🇯🇵 日本語</option>
+                                            <option value="ko-KR">🇰🇷 한국어</option>
+                                            <option value="ar-SA">🇸🇦 العربية</option>
+                                            <option value="ru-RU">🇷🇺 Русский</option>
+                                            <option value="hi-IN">🇮🇳 हिन्दी</option>
+                                        </select>
+                                        <div class="select-arrow">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -407,18 +417,54 @@
                                     <input type="text" id="dialNumber" placeholder="Número de teléfono" class="dial-input">
                                 </div>
                                 <div class="dial-pad">
-                                    <button class="dial-btn" onclick="addDigit('1')">1</button>
-                                    <button class="dial-btn" onclick="addDigit('2')">2</button>
-                                    <button class="dial-btn" onclick="addDigit('3')">3</button>
-                                    <button class="dial-btn" onclick="addDigit('4')">4</button>
-                                    <button class="dial-btn" onclick="addDigit('5')">5</button>
-                                    <button class="dial-btn" onclick="addDigit('6')">6</button>
-                                    <button class="dial-btn" onclick="addDigit('7')">7</button>
-                                    <button class="dial-btn" onclick="addDigit('8')">8</button>
-                                    <button class="dial-btn" onclick="addDigit('9')">9</button>
-                                    <button class="dial-btn" onclick="addDigit('*')">*</button>
-                                    <button class="dial-btn" onclick="addDigit('0')">0</button>
-                                    <button class="dial-btn" onclick="addDigit('#')">#</button>
+                                    <button class="dial-btn" onclick="addDigit('1')">
+                                        <span class="digit">1</span>
+                                        <span class="letters"></span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('2')">
+                                        <span class="digit">2</span>
+                                        <span class="letters">ABC</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('3')">
+                                        <span class="digit">3</span>
+                                        <span class="letters">DEF</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('4')">
+                                        <span class="digit">4</span>
+                                        <span class="letters">GHI</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('5')">
+                                        <span class="digit">5</span>
+                                        <span class="letters">JKL</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('6')">
+                                        <span class="digit">6</span>
+                                        <span class="letters">MNO</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('7')">
+                                        <span class="digit">7</span>
+                                        <span class="letters">PQRS</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('8')">
+                                        <span class="digit">8</span>
+                                        <span class="letters">TUV</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('9')">
+                                        <span class="digit">9</span>
+                                        <span class="letters">WXYZ</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('*')">
+                                        <span class="digit">*</span>
+                                        <span class="letters"></span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('0')">
+                                        <span class="digit">0</span>
+                                        <span class="letters">+</span>
+                                    </button>
+                                    <button class="dial-btn" onclick="addDigit('#')">
+                                        <span class="digit">#</span>
+                                        <span class="letters"></span>
+                                    </button>
                                 </div>
                                 <div class="dial-actions">
                                     <button class="delete-btn" onclick="deleteDigit()">
@@ -428,6 +474,64 @@
                                         <i class="fas fa-phone"></i>
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Call Screen -->
+                <div class="active-call-screen hidden" id="activeCallScreen">
+                    <div class="call-screen-content">
+                        <div class="call-info">
+                            <div class="call-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="call-details">
+                                <h3 class="call-name" id="callContactName">Llamando...</h3>
+                                <p class="call-number" id="callContactNumber">+1234567890</p>
+                                <p class="call-status" id="callStatus">Conectando...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="call-animation">
+                            <div class="call-waves">
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="call-controls">
+                            <button class="call-control-btn mute-btn" onclick="toggleMute()" id="muteBtn">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="call-control-btn speaker-btn" onclick="toggleSpeaker()" id="speakerBtn">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <button class="call-control-btn keypad-btn" onclick="showCallKeypad()">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="call-control-btn end-call-btn" onclick="endCall()">
+                                <i class="fas fa-phone-slash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="call-keypad hidden" id="callKeypad">
+                            <div class="keypad-grid">
+                                <button class="keypad-btn" onclick="sendDTMF('1')">1</button>
+                                <button class="keypad-btn" onclick="sendDTMF('2')">2</button>
+                                <button class="keypad-btn" onclick="sendDTMF('3')">3</button>
+                                <button class="keypad-btn" onclick="sendDTMF('4')">4</button>
+                                <button class="keypad-btn" onclick="sendDTMF('5')">5</button>
+                                <button class="keypad-btn" onclick="sendDTMF('6')">6</button>
+                                <button class="keypad-btn" onclick="sendDTMF('7')">7</button>
+                                <button class="keypad-btn" onclick="sendDTMF('8')">8</button>
+                                <button class="keypad-btn" onclick="sendDTMF('9')">9</button>
+                                <button class="keypad-btn" onclick="sendDTMF('*')">*</button>
+                                <button class="keypad-btn" onclick="sendDTMF('0')">0</button>
+                                <button class="keypad-btn" onclick="sendDTMF('#')">#</button>
                             </div>
                         </div>
                     </div>

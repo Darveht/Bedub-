@@ -1151,12 +1151,184 @@ class EZTranslateApp {
     makePhoneCall() {
         const number = document.getElementById('dialNumber').value;
         if (number) {
-            this.showAlert(`Llamando a ${number}...`);
-            // Add call to history (mock)
-            // In real app, integrate with phone system
+            this.startCall(number);
         } else {
             this.showAlert('Ingresa un número de teléfono');
         }
+    }
+
+    startCall(number) {
+        // Show active call screen
+        const callScreen = document.getElementById('activeCallScreen');
+        const callContactName = document.getElementById('callContactName');
+        const callContactNumber = document.getElementById('callContactNumber');
+        const callStatus = document.getElementById('callStatus');
+        
+        callContactName.textContent = `Llamando a ${number}`;
+        callContactNumber.textContent = number;
+        callStatus.textContent = 'Conectando...';
+        
+        callScreen.classList.add('active');
+        callScreen.classList.remove('hidden');
+        
+        // Play ringtone
+        this.playRingtone();
+        
+        // Simulate call connection
+        setTimeout(() => {
+            callStatus.textContent = 'Llamada en curso...';
+            this.stopRingtone();
+            this.playCallConnectedSound();
+        }, 3000);
+    }
+
+    endCall() {
+        const callScreen = document.getElementById('activeCallScreen');
+        callScreen.classList.remove('active');
+        callScreen.classList.add('hidden');
+        
+        // Stop any sounds
+        this.stopRingtone();
+        this.playCallEndSound();
+        
+        // Reset call controls
+        document.getElementById('muteBtn').classList.remove('active');
+        document.getElementById('speakerBtn').classList.remove('active');
+        document.getElementById('callKeypad').classList.add('hidden');
+        
+        // Clear dial number
+        document.getElementById('dialNumber').value = '';
+    }
+
+    toggleMute() {
+        const muteBtn = document.getElementById('muteBtn');
+        const icon = muteBtn.querySelector('i');
+        
+        if (muteBtn.classList.contains('active')) {
+            muteBtn.classList.remove('active');
+            icon.className = 'fas fa-microphone';
+        } else {
+            muteBtn.classList.add('active');
+            icon.className = 'fas fa-microphone-slash';
+        }
+    }
+
+    toggleSpeaker() {
+        const speakerBtn = document.getElementById('speakerBtn');
+        const icon = speakerBtn.querySelector('i');
+        
+        if (speakerBtn.classList.contains('active')) {
+            speakerBtn.classList.remove('active');
+            icon.className = 'fas fa-volume-up';
+        } else {
+            speakerBtn.classList.add('active');
+            icon.className = 'fas fa-volume-down';
+        }
+    }
+
+    showCallKeypad() {
+        const keypad = document.getElementById('callKeypad');
+        keypad.classList.toggle('hidden');
+    }
+
+    sendDTMF(digit) {
+        // Play DTMF tone
+        this.playDTMFTone(digit);
+        console.log('DTMF:', digit);
+    }
+
+    // Sound effects for calls
+    playRingtone() {
+        if (!this.audioContext) return;
+        
+        this.ringtoneInterval = setInterval(() => {
+            // Play ringtone pattern
+            this.playTone(440, 0.5, 0.3); // A4 note
+            setTimeout(() => {
+                this.playTone(349, 0.5, 0.3); // F4 note
+            }, 600);
+        }, 2000);
+    }
+
+    stopRingtone() {
+        if (this.ringtoneInterval) {
+            clearInterval(this.ringtoneInterval);
+            this.ringtoneInterval = null;
+        }
+    }
+
+    playCallConnectedSound() {
+        if (!this.audioContext) return;
+        
+        // Play ascending tones
+        this.playTone(523, 0.1, 0.2); // C5
+        setTimeout(() => this.playTone(659, 0.1, 0.2), 100); // E5
+        setTimeout(() => this.playTone(784, 0.1, 0.2), 200); // G5
+    }
+
+    playCallEndSound() {
+        if (!this.audioContext) return;
+        
+        // Play descending tones
+        this.playTone(659, 0.2, 0.3); // E5
+        setTimeout(() => this.playTone(523, 0.2, 0.3), 200); // C5
+        setTimeout(() => this.playTone(415, 0.3, 0.3), 400); // G#4
+    }
+
+    playDTMFTone(digit) {
+        if (!this.audioContext) return;
+        
+        const dtmfFreqs = {
+            '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+            '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+            '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+            '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+        };
+        
+        const freqs = dtmfFreqs[digit];
+        if (freqs) {
+            this.playDualTone(freqs[0], freqs[1], 0.2, 0.3);
+        }
+    }
+
+    playTone(frequency, duration, volume = 0.3) {
+        if (!this.audioContext) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    playDualTone(freq1, freq2, duration, volume = 0.3) {
+        if (!this.audioContext) return;
+        
+        const oscillator1 = this.audioContext.createOscillator();
+        const oscillator2 = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator1.frequency.setValueAtTime(freq1, this.audioContext.currentTime);
+        oscillator2.frequency.setValueAtTime(freq2, this.audioContext.currentTime);
+        
+        gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator1.start(this.audioContext.currentTime);
+        oscillator2.start(this.audioContext.currentTime);
+        oscillator1.stop(this.audioContext.currentTime + duration);
+        oscillator2.stop(this.audioContext.currentTime + duration);
     }
     
     makeCall() {
@@ -1360,6 +1532,26 @@ function deleteDigit() {
 
 function makePhoneCall() {
     app.makePhoneCall();
+}
+
+function endCall() {
+    app.endCall();
+}
+
+function toggleMute() {
+    app.toggleMute();
+}
+
+function toggleSpeaker() {
+    app.toggleSpeaker();
+}
+
+function showCallKeypad() {
+    app.showCallKeypad();
+}
+
+function sendDTMF(digit) {
+    app.sendDTMF(digit);
 }
 
 function makeCall() {
