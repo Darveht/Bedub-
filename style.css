@@ -2357,6 +2357,64 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
+/* Botón de instalación PWA */
+.install-app-btn {
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
+    min-width: 100px;
+    justify-content: center;
+}
+
+.install-app-btn:hover {
+    background: linear-gradient(135deg, #00b894 0%, #009973 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+}
+
+.install-app-btn:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.install-app-btn.installed {
+    background: #28a745;
+    color: #fff;
+}
+
+.install-app-btn.installed:hover {
+    background: #218838;
+}
+
+/* Animación de instalación */
+.install-app-btn.installing {
+    background: #ffc107;
+    color: #000;
+    pointer-events: none;
+}
+
+.install-app-btn.installing i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* ============ NEW CHAT STYLES ============ */
 .new-chat-container {
     position: fixed;

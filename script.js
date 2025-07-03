@@ -28,6 +28,9 @@ class EZTranslateApp {
         this.loadMockData();
         this.requestNotificationPermission();
         this.checkExistingAuth();
+
+        // Initialize PWA features
+        this.initializePWA();
     }
 
     // Verificar si el usuario ya está autenticado
@@ -202,7 +205,7 @@ class EZTranslateApp {
     // ============ AUTH FUNCTIONS (SIN FIREBASE) ============
     async sendVerificationCode() {
         console.log('sendVerificationCode called');
-        
+
         const phoneInput = document.getElementById('phoneNumber');
         const countryCode = document.getElementById('countryCode');
         const language = document.getElementById('preferredLanguage');
@@ -242,14 +245,14 @@ class EZTranslateApp {
 
         try {
             this.showLoading('Enviando código SMS...');
-            
+
             // Simular envío de SMS con timeout más corto
             await this.delay(1500);
 
             // Store data
             localStorage.setItem('userLanguage', language.value);
             localStorage.setItem('userPhone', fullPhone);
-            
+
             // Update UI
             const phoneDisplay = document.getElementById('phoneDisplay');
             if (phoneDisplay) {
@@ -957,8 +960,7 @@ class EZTranslateApp {
                 'es': 'es',
                 'en': 'en',
                 'fr': 'fr',
-                'de': 'de',
-                'it': 'it',
+                'de': 'de','it': 'it',
                 'pt': 'pt',
                 'zh': 'zh',
                 'ja': 'ja',
@@ -1193,7 +1195,7 @@ class EZTranslateApp {
 
     showLoading(text = 'Cargando...') {
         console.log('Showing loading:', text);
-        
+
         // Use requestAnimationFrame to prevent UI blocking
         requestAnimationFrame(() => {
             let loadingOverlay = document.getElementById('loadingOverlay');
@@ -2007,7 +2009,231 @@ class EZTranslateApp {
         this.showAlert('Menú de chat próximamente');
     }
 
-    
+    // ============ PWA FUNCTIONS ============
+    initializePWA() {
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registrado: ', registration);
+
+                        // Escuchar actualizaciones
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    this.showUpdateNotification();
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log('SW registration failed: ', error);
+                    });
+            });
+        }
+
+        // Configurar evento de instalación PWA
+        this.deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            this.updateInstallButton(true);
+        });
+
+        // Detectar si ya está instalado
+        window.addEventListener('appinstalled', () => {
+            this.updateInstallButton(false, true);
+            this.showAlert('¡BeDub se instaló correctamente como aplicación!');
+        });
+
+        // Detectar si es PWA standalone
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            console.log('Running as PWA');
+            document.body.classList.add('pwa-mode');
+        }
+    }
+
+    async installPWA() {
+        if (!this.deferredPrompt) {
+            this.showAlert('La instalación no está disponible en este momento');
+            return;
+        }
+
+        const installBtn = document.getElementById('installAppBtn');
+
+        // Mostrar estado de instalación
+        installBtn.classList.add('installing');
+        installBtn.innerHTML = '<i class="fas fa-spinner"></i><span>Instalando...</span>';
+
+        try {
+            // Mostrar prompt de instalación
+            this.deferredPrompt.prompt();
+
+            // Esperar respuesta del usuario
+            const { outcome } = await this.deferredPrompt.userChoice;
+
+            if (outcome === 'accepted') {
+                console.log('Usuario aceptó la instalación');
+                this.updateInstallButton(false, true);
+                this.showAlert('¡Instalación iniciada! BeDub se agregará a tu pantalla de inicio.');
+            } else {
+                console.log('Usuario rechazó la instalación');
+                this.updateInstallButton(true);
+                this.showAlert('Instalación cancelada');
+            }
+
+            this.deferredPrompt = null;
+        } catch (error) {
+            console.error('Error durante la instalación:', error);
+            this.updateInstallButton(true);
+            this.showAlert('Error durante la instalación. Inténtalo de nuevo.');
+        }
+    }
+
+    updateInstallButton(canInstall, isInstalled = false) {
+        const installBtn = document.getElementById('installAppBtn');
+        const installSection = document.getElementById('installAppSection');
+
+        if (!installBtn || !installSection) return;
+
+        installBtn.classList.remove('installing');
+
+        if (isInstalled) {
+            installBtn.classList.add('installed');
+            installBtn.innerHTML = '<i class="fas fa-check"></i><span>Instalado</span>';
+            installBtn.disabled = true;
+            installSection.querySelector('.setting-description').textContent = 'BeDub está instalado como aplicación nativa';
+        } else if (canInstall) {
+            installBtn.classList.remove('installed');
+            installBtn.innerHTML = '<i class="fas fa-download"></i><span>Instalar</span>';
+            installBtn.disabled = false;
+            installSection.querySelector('.setting-description').textContent = 'Descargar BeDub como aplicación nativa';
+        } else {
+            installBtn.disabled = true;
+            installBtn.innerHTML = '<i class="fas fa-mobile-alt"></i><span>No disponible</span>';
+            installSection.querySelector('.setting-description').textContent = 'La instalación no está disponible en este dispositivo';
+        }
+    }
+
+    showUpdateNotification() {
+        const updateDiv = document.createElement('div');
+        updateDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            color: #000;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 10001;
+            box-shadow: 0 8px 32px rgba(0,212,170,0.4);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            max-width: 90%;
+            animation: slideDownUpdate 0.5s ease;
+        `;
+
+        updateDiv.innerHTML = `
+            <i class="fas fa-sync-alt"></i>
+            <span>Nueva versión disponible</span>
+            <button onclick="app.updateApp()" style="
+                background: rgba(0,0,0,0.2);
+                border: none;
+                color: #000;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(0,0,0,0.3)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+                Actualizar
+            </button>
+            <button onclick="this.parentElement.remove()" style="
+                background: none;
+                border: none;
+                color: #000;
+                cursor: pointer;
+                font-size: 18px;
+                padding: 4px;
+                margin-left: 8px;
+            ">
+                ×
+            </button>
+        `;
+
+        // Agregar animación CSS si no existe
+        if (!document.querySelector('#updateAnimationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'updateAnimationStyles';
+            style.textContent = `
+                @keyframes slideDownUpdate {
+                    from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(updateDiv);
+
+        // Auto-remove después de 10 segundos
+        setTimeout(() => {
+            if (updateDiv.parentElement) {
+                updateDiv.remove();
+            }
+        }, 10000);
+    }
+
+    updateApp() {
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+        }
+    }
+
+    // Generar APK usando PWABuilder (para mostrar en ajustes)
+    async generateAPK() {
+        const generateBtn = document.createElement('button');
+        generateBtn.style.cssText = `
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+            margin-top: 8px;
+        `;
+
+        generateBtn.innerHTML = '<i class="fas fa-android"></i><span>Generar APK</span>';
+
+        generateBtn.onclick = () => {
+            this.showAlert('Redirigiendo a PWABuilder para generar APK...');
+
+            // Abrir PWABuilder con la URL de la app
+            const pwaBuilderUrl = `https://www.pwabuilder.com/reportcard?site=${encodeURIComponent(window.location.origin)}`;
+            window.open(pwaBuilderUrl, '_blank');
+        };
+
+        // Agregar después del botón de instalación
+        const installSection = document.getElementById('installAppSection');
+        if (installSection) {
+            installSection.appendChild(generateBtn);
+        }
+    }
+
+
 }
 
 // Voice recording functionality
@@ -2347,4 +2573,12 @@ function makeCallFromChat() {
 
 function toggleChatMenu() {
     app.toggleChatMenu();
+}
+
+function installPWA() {
+    app.installPWA();
+}
+
+function updateApp() {
+    app.updateApp();
 }
