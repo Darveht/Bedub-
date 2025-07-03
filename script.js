@@ -1,6 +1,8 @@
 // Aplicación EZTranslate sin dependencias externas
 class EZTranslateApp {
     constructor() {
+        console.log('EZTranslateApp constructor called');
+        
         this.currentUser = null;
         this.currentChat = null;
         this.contacts = new Map();
@@ -18,16 +20,41 @@ class EZTranslateApp {
         // Mock verification code for testing
         this.mockVerificationCode = '123456';
 
+        console.log('About to initialize app');
+        
         // Initialize app
-        this.initializeApp();
+        try {
+            this.initializeApp();
+            console.log('App initialization completed');
+        } catch (error) {
+            console.error('Error during app initialization:', error);
+        }
     }
 
     initializeApp() {
-        this.setupEventListeners();
-        this.setupVerificationInput();
-        this.loadMockData();
-        this.requestNotificationPermission();
-        this.checkExistingAuth();
+        console.log('initializeApp started');
+        
+        try {
+            console.log('Setting up event listeners...');
+            this.setupEventListeners();
+            
+            console.log('Setting up verification input...');
+            this.setupVerificationInput();
+            
+            console.log('Loading mock data...');
+            this.loadMockData();
+            
+            console.log('Requesting notification permission...');
+            this.requestNotificationPermission();
+            
+            console.log('Checking existing auth...');
+            this.checkExistingAuth();
+            
+            console.log('App initialization completed successfully');
+        } catch (error) {
+            console.error('Error in initializeApp:', error);
+            this.showAlert('Error al inicializar la aplicación');
+        }
     }
 
     // Verificar si el usuario ya está autenticado
@@ -83,10 +110,16 @@ class EZTranslateApp {
     }
 
     setupEventListeners() {
+        console.log('Setting up event listeners');
+        
         // Phone input formatting
         const phoneInput = document.getElementById('phoneNumber');
+        console.log('Phone input found:', phoneInput);
         if (phoneInput) {
             phoneInput.addEventListener('input', this.formatPhoneNumber.bind(this));
+            console.log('Phone input event listener added');
+        } else {
+            console.warn('Phone input element not found during setup');
         }
 
         // Message input - old implementation
@@ -201,9 +234,15 @@ class EZTranslateApp {
 
     // ============ AUTH FUNCTIONS (SIN FIREBASE) ============
     async sendVerificationCode() {
+        console.log('sendVerificationCode called');
+        
         const phoneInput = document.getElementById('phoneNumber');
-        const countryCode = document.getElementById('countryCode').value;
-        const language = document.getElementById('preferredLanguage').value;
+        const countryCode = document.getElementById('countryCode');
+        const language = document.getElementById('preferredLanguage');
+
+        console.log('Phone input:', phoneInput);
+        console.log('Country code:', countryCode);
+        console.log('Language:', language);
 
         if (!phoneInput) {
             console.error('Phone input element not found');
@@ -211,8 +250,25 @@ class EZTranslateApp {
             return;
         }
 
+        if (!countryCode) {
+            console.error('Country code element not found');
+            this.showAlert('Error: No se encontró el selector de país');
+            return;
+        }
+
+        if (!language) {
+            console.error('Language element not found');
+            this.showAlert('Error: No se encontró el selector de idioma');
+            return;
+        }
+
         const phoneNumber = phoneInput.value;
+        const countryCodeValue = countryCode.value;
+        const languageValue = language.value;
+
         console.log('Valor del input:', phoneNumber);
+        console.log('Country code value:', countryCodeValue);
+        console.log('Language value:', languageValue);
 
         if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
@@ -228,7 +284,7 @@ class EZTranslateApp {
             return;
         }
 
-        const fullPhone = countryCode + cleanPhone;
+        const fullPhone = countryCodeValue + cleanPhone;
         console.log('Número completo a enviar:', fullPhone);
 
         this.showLoading('Enviando código SMS...');
@@ -237,8 +293,12 @@ class EZTranslateApp {
             // Simular envío de SMS
             await this.delay(2000);
 
-            document.getElementById('phoneDisplay').textContent = fullPhone;
-            localStorage.setItem('userLanguage', language);
+            const phoneDisplay = document.getElementById('phoneDisplay');
+            if (phoneDisplay) {
+                phoneDisplay.textContent = fullPhone;
+            }
+            
+            localStorage.setItem('userLanguage', languageValue);
             localStorage.setItem('userPhone', fullPhone);
             this.hideLoading();
             this.switchToVerification();
@@ -1048,40 +1108,51 @@ updateSettingsDisplay() {
     }
 
     showAlert(message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #00d4aa;
-            color: #000;
-            padding: 16px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            z-index: 10000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            animation: slideDown 0.3s ease;
-        `;
-        alertDiv.textContent = message;
-
-        if (!document.querySelector('#alertStyles')) {
-            const style = document.createElement('style');
-            style.id = 'alertStyles';
-            style.textContent = `
-                @keyframes slideDown {
-                    from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
-                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
-                }
+        console.log('Showing alert:', message);
+        
+        // Fallback to browser alert if DOM manipulation fails
+        try {
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #00d4aa;
+                color: #000;
+                padding: 16px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                z-index: 10000;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                animation: slideDown 0.3s ease;
             `;
-            document.head.appendChild(style);
+            alertDiv.textContent = message;
+
+            if (!document.querySelector('#alertStyles')) {
+                const style = document.createElement('style');
+                style.id = 'alertStyles';
+                style.textContent = `
+                    @keyframes slideDown {
+                        from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        } catch (error) {
+            console.error('Error showing custom alert:', error);
+            // Fallback to browser alert
+            alert(message);
         }
-
-        document.body.appendChild(alertDiv);
-
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 3000);
     }
 
     delay(ms) {
@@ -1232,12 +1303,25 @@ updateSettingsDisplay() {
 let app;
 
 document.addEventListener('DOMContentLoaded', () => {
-    app = new EZTranslateApp();
+    console.log('DOM Content Loaded');
+    try {
+        app = new EZTranslateApp();
+        console.log('App initialized successfully:', app);
+    } catch (error) {
+        console.error('Error initializing app:', error);
+    }
 });
 
 // Global functions for HTML onclick events
 function sendVerificationCode() {
-    app.sendVerificationCode();
+    console.log('sendVerificationCode function called');
+    if (app) {
+        console.log('App exists, calling sendVerificationCode');
+        app.sendVerificationCode();
+    } else {
+        console.error('App not initialized');
+        alert('La aplicación no se ha inicializado correctamente. Por favor, recarga la página.');
+    }
 }
 
 function verifyCode() {
