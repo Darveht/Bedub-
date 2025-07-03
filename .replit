@@ -2,3 +2,15 @@ modules = ["nodejs-20", "web"]
 
 [nix]
 channel = "stable-24_05"
+
+[workflows]
+runButton = "Run Web Server"
+
+[[workflows.workflow]]
+name = "Run Web Server"
+author = 44558869
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx http-server . -p 5000 -a 0.0.0.0"
