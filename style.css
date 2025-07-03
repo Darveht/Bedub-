@@ -586,6 +586,8 @@ body {
 
 .chat-main.active {
     transform: translateX(0);
+    height: 100vh;
+    overflow: hidden;
 }
 
 .chat-main.show-placeholder {
@@ -635,9 +637,10 @@ body {
 
 .active-chat {
     width: 100%;
-    height: 100%;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .chat-header {
@@ -738,20 +741,22 @@ body {
 .messages-container {
     flex: 1;
     padding: 20px;
-    padding-bottom: 80px;
+    padding-bottom: 20px;
     overflow-y: auto;
     background: #f8f9fa;
+    height: calc(100vh - 200px);
 }
 
 .message-input-area {
     padding: 20px;
     background: white;
     border-top: 1px solid #e5e5e5;
-    position: sticky;
-    bottom: 0;
+    position: fixed;
+    bottom: 80px;
     left: 0;
     right: 0;
     z-index: 10;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .input-container {
@@ -2339,6 +2344,66 @@ input:checked + .slider:before {
     font-size: 11px;
     opacity: 0.6;
     text-align: right;
+}
+
+/* Indicador de escritura */
+.typing-bubble {
+    background: rgba(0, 0, 0, 0.1) !important;
+    padding: 8px 16px !important;
+}
+
+.typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #666;
+    animation: typingDots 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+.typing-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingDots {
+    0%, 80%, 100% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.typing-text {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Mejorar animaciones de mensajes */
+.message {
+    transition: all 0.3s ease;
+}
+
+.message:hover {
+    transform: translateY(-1px);
+}
+
+.message.sent .message-bubble:hover {
+    background: #333;
+}
+
+.message.received .message-bubble:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .chat-item {

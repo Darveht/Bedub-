@@ -427,9 +427,13 @@ class EZTranslateApp {
         
         const messages = this.messages.get(this.currentChat) || [];
         
-        messages.forEach(message => {
+        messages.forEach((message, index) => {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${message.sent ? 'sent' : 'received'}`;
+            
+            // Agregar animación de entrada con delay
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateY(20px)';
             
             messageDiv.innerHTML = `
                 <div class="message-bubble">
@@ -441,9 +445,22 @@ class EZTranslateApp {
             `;
             
             messagesContainer.appendChild(messageDiv);
+            
+            // Animar entrada del mensaje
+            setTimeout(() => {
+                messageDiv.style.transition = 'all 0.3s ease';
+                messageDiv.style.opacity = '1';
+                messageDiv.style.transform = 'translateY(0)';
+            }, index * 50);
         });
         
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Scroll suave al final
+        setTimeout(() => {
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, messages.length * 50 + 100);
     }
     
     async sendMessage() {
@@ -452,30 +469,82 @@ class EZTranslateApp {
         
         if (!text || !this.currentChat) return;
         
+        // Limpiar input inmediatamente para mejor UX
         messageInput.value = '';
+        
+        // Mostrar indicador de "enviando"
+        this.showTypingIndicator(true);
         
         // Play send sound
         if (this.sendSound) this.sendSound();
         
         const contact = this.contacts.get(this.currentChat);
-        const message = {
-            text: text,
-            translation: await this.translateText(text, this.currentUser.language, contact.language),
-            sent: true,
-            timestamp: new Date()
-        };
         
-        // Add to messages
-        if (!this.messages.has(this.currentChat)) {
-            this.messages.set(this.currentChat, []);
+        try {
+            const message = {
+                text: text,
+                translation: await this.translateText(text, this.currentUser.language, contact.language),
+                sent: true,
+                timestamp: new Date()
+            };
+            
+            // Add to messages
+            if (!this.messages.has(this.currentChat)) {
+                this.messages.set(this.currentChat, []);
+            }
+            this.messages.get(this.currentChat).push(message);
+            
+            // Ocultar indicador de escritura
+            this.showTypingIndicator(false);
+            
+            this.renderMessages();
+            this.renderChatList();
+            
+            // Simulate response with typing indicator
+            setTimeout(() => {
+                this.showTypingIndicator(true, false); // Mostrar que el otro está escribiendo
+                setTimeout(() => this.simulateResponse(), 1500);
+            }, 1000);
+            
+        } catch (error) {
+            this.showTypingIndicator(false);
+            this.showAlert('Error al enviar mensaje. Intenta de nuevo.');
         }
-        this.messages.get(this.currentChat).push(message);
+    }
+    
+    showTypingIndicator(show, isSending = true) {
+        const messagesContainer = document.getElementById('messagesContainer');
+        let typingIndicator = document.getElementById('typingIndicator');
         
-        this.renderMessages();
-        this.renderChatList();
-        
-        // Simulate response
-        setTimeout(() => this.simulateResponse(), 2000);
+        if (show) {
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            
+            typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typingIndicator';
+            typingIndicator.className = `message ${isSending ? 'sent' : 'received'}`;
+            typingIndicator.innerHTML = `
+                <div class="message-bubble typing-bubble">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="typing-text">${isSending ? 'Enviando...' : 'Escribiendo...'}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingIndicator);
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        } else {
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
     }
     
     async simulateResponse() {
@@ -487,25 +556,38 @@ class EZTranslateApp {
             'Thanks for the message.',
             'How interesting!',
             'I agree with you.',
-            'Tell me more about it.'
+            'Tell me more about it.',
+            'Could you tell me more?',
+            'That\'s really cool!',
+            'I see what you mean.',
+            'Absolutely right!'
         ];
         
         const contact = this.contacts.get(this.currentChat);
         const responseText = responses[Math.floor(Math.random() * responses.length)];
         
-        const response = {
-            text: responseText,
-            translation: await this.translateText(responseText, contact.language, this.currentUser.language),
-            sent: false,
-            timestamp: new Date()
-        };
-        
-        // Play receive sound
-        if (this.receiveSound) this.receiveSound();
-        
-        this.messages.get(this.currentChat).push(response);
-        this.renderMessages();
-        this.renderChatList();
+        try {
+            const response = {
+                text: responseText,
+                translation: await this.translateText(responseText, contact.language, this.currentUser.language),
+                sent: false,
+                timestamp: new Date()
+            };
+            
+            // Ocultar indicador de escritura
+            this.showTypingIndicator(false);
+            
+            // Play receive sound
+            if (this.receiveSound) this.receiveSound();
+            
+            this.messages.get(this.currentChat).push(response);
+            this.renderMessages();
+            this.renderChatList();
+            
+        } catch (error) {
+            this.showTypingIndicator(false);
+            console.error('Error simulating response:', error);
+        }
     }
     
     async translateText(text, fromLang, toLang) {
