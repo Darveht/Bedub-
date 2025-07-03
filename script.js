@@ -35,22 +35,25 @@ class EZTranslateApp {
         console.log('initializeApp started');
         
         try {
-            console.log('Setting up event listeners...');
-            this.setupEventListeners();
-            
-            console.log('Setting up verification input...');
-            this.setupVerificationInput();
-            
-            console.log('Loading mock data...');
-            this.loadMockData();
-            
-            console.log('Requesting notification permission...');
-            this.requestNotificationPermission();
-            
-            console.log('Checking existing auth...');
-            this.checkExistingAuth();
-            
-            console.log('App initialization completed successfully');
+            // Wait for DOM to be fully ready
+            setTimeout(() => {
+                console.log('Setting up event listeners...');
+                this.setupEventListeners();
+                
+                console.log('Setting up verification input...');
+                this.setupVerificationInput();
+                
+                console.log('Loading mock data...');
+                this.loadMockData();
+                
+                console.log('Requesting notification permission...');
+                this.requestNotificationPermission();
+                
+                console.log('Checking existing auth...');
+                this.checkExistingAuth();
+                
+                console.log('App initialization completed successfully');
+            }, 100);
         } catch (error) {
             console.error('Error in initializeApp:', error);
             this.showAlert('Error al inicializar la aplicación');
@@ -236,6 +239,9 @@ class EZTranslateApp {
     async sendVerificationCode() {
         console.log('sendVerificationCode called');
         
+        // Wait a moment to ensure DOM is ready
+        await this.delay(100);
+        
         const phoneInput = document.getElementById('phoneNumber');
         const countryCode = document.getElementById('countryCode');
         const language = document.getElementById('preferredLanguage');
@@ -272,6 +278,7 @@ class EZTranslateApp {
 
         if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
+            phoneInput.focus();
             return;
         }
 
@@ -281,6 +288,7 @@ class EZTranslateApp {
 
         if (cleanPhone.length < 10) {
             this.showAlert('Número de teléfono demasiado corto (mínimo 10 dígitos)');
+            phoneInput.focus();
             return;
         }
 
@@ -1320,7 +1328,20 @@ function sendVerificationCode() {
         app.sendVerificationCode();
     } else {
         console.error('App not initialized');
-        alert('La aplicación no se ha inicializado correctamente. Por favor, recarga la página.');
+        // Try to initialize if not done yet
+        setTimeout(() => {
+            if (!app) {
+                try {
+                    app = new EZTranslateApp();
+                    app.sendVerificationCode();
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    alert('La aplicación no se ha inicializado correctamente. Por favor, recarga la página.');
+                }
+            } else {
+                app.sendVerificationCode();
+            }
+        }, 100);
     }
 }
 
