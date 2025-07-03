@@ -647,6 +647,7 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
+    background: #f8f9fa;
 }
 
 .chat-header {
@@ -658,6 +659,7 @@ body {
     gap: 16px;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(10px);
+    z-index: 10;
 }
 
 .back-btn {
@@ -749,16 +751,15 @@ body {
 .messages-container {
     flex: 1;
     padding: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 100px;
     overflow-y: auto;
     background: #f8f9fa;
-    height: calc(100vh - 140px);
+    min-height: 0;
 }
 
 .active-chat .messages-container {
-    height: calc(100vh - 220px);
-    padding-bottom: 20px;
-    margin-bottom: 80px;
+    background: #f8f9fa;
+    padding-bottom: 100px;
 }
 
 .message-input-area {
@@ -960,13 +961,12 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, #000 0%, #0a0a0a 50%, #000 100%);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    backdrop-filter: blur(12px);
-    animation: loadingBgPulse 3s ease-in-out infinite;
+    backdrop-filter: blur(20px);
 }
 
 .loading-overlay::before {
@@ -977,10 +977,9 @@ body {
     right: 0;
     bottom: 0;
     background: 
-        radial-gradient(circle at 20% 20%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(0, 184, 148, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 60% 40%, rgba(0, 212, 170, 0.05) 0%, transparent 50%);
-    animation: loadingBgMove 8s linear infinite;
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 70%),
+        radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+    animation: loadingBgFloat 6s ease-in-out infinite;
     z-index: -1;
 }
 
@@ -994,50 +993,39 @@ body {
 .loading-spinner span {
     font-size: 18px;
     font-weight: 600;
-    margin-top: 16px;
+    margin-top: 24px;
     display: block;
-    text-shadow: 0 0 20px rgba(0, 212, 170, 0.5);
-    animation: loadingTextGlow 2s ease-in-out infinite;
+    color: #fff;
+    opacity: 0.9;
+    animation: loadingTextPulse 2s ease-in-out infinite;
 }
 
-@keyframes loadingBgPulse {
+@keyframes loadingBgFloat {
     0%, 100% { 
-        background: linear-gradient(45deg, #000 0%, #0a0a0a 50%, #000 100%);
+        transform: translateY(0px);
+        opacity: 0.3;
     }
     50% { 
-        background: linear-gradient(45deg, #000 0%, #111 50%, #000 100%);
+        transform: translateY(-10px);
+        opacity: 0.6;
     }
 }
 
-@keyframes loadingBgMove {
-    0% { 
-        transform: rotate(0deg) scale(1);
-    }
-    50% { 
-        transform: rotate(180deg) scale(1.1);
-    }
-    100% { 
-        transform: rotate(360deg) scale(1);
-    }
-}
-
-@keyframes loadingTextGlow {
+@keyframes loadingTextPulse {
     0%, 100% { 
-        text-shadow: 0 0 20px rgba(0, 212, 170, 0.5);
-        opacity: 0.9;
+        opacity: 0.7;
     }
     50% { 
-        text-shadow: 0 0 30px rgba(0, 212, 170, 0.8);
         opacity: 1;
     }
 }
 
 .spinner {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
     margin: 0 auto 24px;
     position: relative;
-    animation: spinnerRotate 2s linear infinite;
+    animation: spinnerFloat 2s ease-in-out infinite;
 }
 
 .spinner::before {
@@ -1047,68 +1035,40 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    border: 3px solid transparent;
-    border-top: 3px solid #00d4aa;
-    border-right: 3px solid #00d4aa;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #fff;
     border-radius: 50%;
-    animation: spinnerPulse 1.5s ease-in-out infinite;
-    box-shadow: 
-        0 0 20px rgba(0, 212, 170, 0.4),
-        inset 0 0 20px rgba(0, 212, 170, 0.2);
+    animation: spinnerSpin 1.2s linear infinite;
 }
 
 .spinner::after {
     content: '';
     position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    border: 2px solid transparent;
-    border-bottom: 2px solid #00b894;
-    border-left: 2px solid #00b894;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid #fff;
     border-radius: 50%;
-    animation: spinnerRotate 1s linear infinite reverse;
-    box-shadow: 
-        0 0 15px rgba(0, 184, 148, 0.6),
-        inset 0 0 15px rgba(0, 184, 148, 0.3);
+    animation: spinnerSpin 1.8s linear infinite reverse;
 }
 
-@keyframes spinnerRotate {
-    0% { 
-        transform: rotate(0deg);
-    }
-    100% { 
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes spinnerPulse {
+@keyframes spinnerFloat {
     0%, 100% { 
-        border-width: 3px;
-        box-shadow: 
-            0 0 20px rgba(0, 212, 170, 0.4),
-            inset 0 0 20px rgba(0, 212, 170, 0.2);
+        transform: translateY(0px);
     }
     50% { 
-        border-width: 6px;
-        box-shadow: 
-            0 0 40px rgba(0, 212, 170, 0.8),
-            inset 0 0 30px rgba(0, 212, 170, 0.4);
+        transform: translateY(-8px);
     }
 }
 
-@keyframes spin {
+@keyframes spinnerSpin {
     0% { 
         transform: rotate(0deg);
-        box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
-    }
-    50% {
-        box-shadow: 0 0 40px rgba(0, 212, 170, 0.5);
     }
     100% { 
         transform: rotate(360deg);
-        box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
     }
 }
 
