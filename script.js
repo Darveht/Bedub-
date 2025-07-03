@@ -1,15 +1,4 @@
-// Importar módulos de Firebase y WebSocket
-import { 
-    sendSMSVerification, 
-    verifySMSCode, 
-    onAuthChange,
-    updateUserOnlineStatus,
-    sendMessage,
-    listenToMessages,
-    listenToUserChats
-} from './firebase-config.js';
-import { websocketClient } from './websocket-client.js';
-
+// Aplicación EZTranslate sin dependencias externas
 class EZTranslateApp {
     constructor() {
         this.currentUser = null;
@@ -18,27 +7,24 @@ class EZTranslateApp {
         this.messages = new Map();
         this.currentSlide = 0;
         this.maxSlides = 4;
-        
+
         // App state
         this.appState = 'auth'; // auth, tutorial, main
-        
+
         // Voice recording state
         this.isVoiceRecording = false;
         this.speechRecognition = null;
-        
-        // Firebase y WebSocket
-        this.firebaseUser = null;
-        this.messageListeners = new Map();
-        this.typingTimeout = null;
-        
+
+        // Mock verification code for testing
+        this.mockVerificationCode = '123456';
+
         // Initialize app
         this.initializeApp();
     }
-    
+
     initializeApp() {
         this.setupEventListeners();
         this.setupVerificationInput();
-        this.setupFirebaseAuth();
         this.loadMockData();
         this.requestNotificationPermission();
         this.checkExistingAuth();
@@ -46,23 +32,20 @@ class EZTranslateApp {
 
     // Verificar si el usuario ya está autenticado
     checkExistingAuth() {
-        // Por seguridad, limpiar autenticación previa para testing
-        localStorage.removeItem('userAuthenticated');
-        localStorage.removeItem('hasSeenTutorial');
-        
         const isAuthenticated = localStorage.getItem('userAuthenticated');
         const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-        
+
         if (isAuthenticated === 'true') {
             // Usuario ya autenticado, ir directo a la app
             document.getElementById('authContainer').classList.add('hidden');
-            
+
             if (hasSeenTutorial === 'true') {
                 const mainApp = document.getElementById('mainApp');
                 if (mainApp) {
                     mainApp.classList.remove('hidden');
                 }
                 this.appState = 'main';
+                this.loadUserData();
             } else {
                 const tutorialContainer = document.getElementById('tutorialContainer');
                 if (tutorialContainer) {
@@ -72,58 +55,24 @@ class EZTranslateApp {
             }
         }
     }
-    
-    // Configurar autenticación de Firebase
-    setupFirebaseAuth() {
-        onAuthChange((user) => {
-            if (user) {
-                this.firebaseUser = user;
-                this.currentUser = {
-                    uid: user.uid,
-                    phone: user.phoneNumber,
-                    name: user.displayName || 'Usuario',
-                    language: localStorage.getItem('userLanguage') || 'es'
-                };
-                
-                // Conectar WebSocket
-                this.connectWebSocket();
-                
-                // Escuchar chats del usuario
-                this.listenToUserChats();
-                
-                console.log('Usuario autenticado:', this.currentUser);
-            } else {
-                this.firebaseUser = null;
-                this.currentUser = null;
-                this.disconnectWebSocket();
-                console.log('Usuario no autenticado');
-            }
-        });
-    }
-    
-    // Conectar WebSocket
-    connectWebSocket() {
-        if (this.firebaseUser) {
-            this.firebaseUser.getIdToken().then((token) => {
-                websocketClient.connect(this.firebaseUser.uid, token);
-                
-                // Configurar callbacks globales
-                websocketClient.socket.on('new_message', (data) => {
-                    this.handleNewWebSocketMessage(data);
-                });
-                
-                websocketClient.socket.on('user_status_update', (data) => {
-                    this.handleUserStatusUpdate(data);
-                });
-            });
+
+    // Cargar datos del usuario desde localStorage
+    loadUserData() {
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+            this.currentUser = JSON.parse(userData);
+        } else {
+            // Datos por defecto
+            this.currentUser = {
+                uid: 'user_' + Date.now(),
+                phone: localStorage.getItem('userPhone') || '+1234567890',
+                name: 'Usuario',
+                language: localStorage.getItem('userLanguage') || 'es'
+            };
+            localStorage.setItem('userData', JSON.stringify(this.currentUser));
         }
     }
-    
-    // Desconectar WebSocket
-    disconnectWebSocket() {
-        websocketClient.disconnect();
-    }
-    
+
     // Solicitar permisos de notificación
     requestNotificationPermission() {
         if ('Notification' in window && Notification.permission === 'default') {
@@ -132,14 +81,14 @@ class EZTranslateApp {
             });
         }
     }
-    
+
     setupEventListeners() {
         // Phone input formatting
         const phoneInput = document.getElementById('phoneNumber');
         if (phoneInput) {
             phoneInput.addEventListener('input', this.formatPhoneNumber.bind(this));
         }
-        
+
         // Message input - old implementation
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
@@ -149,7 +98,7 @@ class EZTranslateApp {
                 }
             });
         }
-        
+
         // New message input
         const newMessageInput = document.getElementById('messageTextInput');
         if (newMessageInput) {
@@ -159,7 +108,7 @@ class EZTranslateApp {
                 }
             });
         }
-        
+
         // Translator input
         const sourceText = document.getElementById('sourceText');
         if (sourceText) {
@@ -177,7 +126,7 @@ class EZTranslateApp {
                 }
             });
         }
-        
+
         // Language selector change events
         const fromLanguage = document.getElementById('fromLanguage');
         const toLanguage = document.getElementById('toLanguage');
@@ -191,7 +140,7 @@ class EZTranslateApp {
                         });
                 }
             });
-            
+
             toLanguage.addEventListener('change', () => {
                 const text = document.getElementById('sourceText').value;
                 if (text.trim()) {
@@ -202,14 +151,14 @@ class EZTranslateApp {
                 }
             });
         }
-        
+
         // Tutorial indicators
         const indicators = document.querySelectorAll('.indicator');
         indicators.forEach((indicator, index) => {
             indicator.addEventListener('click', () => this.goToSlide(index));
         });
     }
-    
+
     setupVerificationInput() {
         const codeInputs = document.querySelectorAll('.code-digit');
         codeInputs.forEach((input, index) => {
@@ -221,14 +170,14 @@ class EZTranslateApp {
                 if (value === '' && index > 0) {
                     codeInputs[index - 1].focus();
                 }
-                
+
                 // Auto verify when all digits filled
                 const allFilled = Array.from(codeInputs).every(input => input.value);
                 if (allFilled) {
                     setTimeout(() => this.verifyCode(), 500);
                 }
             });
-            
+
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !e.target.value && index > 0) {
                     codeInputs[index - 1].focus();
@@ -236,147 +185,121 @@ class EZTranslateApp {
             });
         });
     }
-    
+
     formatPhoneNumber(e) {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 10) value = value.slice(0, 10);
-        
+
         if (value.length >= 6) {
             value = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6)}`;
         } else if (value.length >= 3) {
             value = `${value.slice(0, 3)}-${value.slice(3)}`;
         }
-        
+
         e.target.value = value;
     }
-    
-    // ============ AUTH FUNCTIONS ============
+
+    // ============ AUTH FUNCTIONS (SIN FIREBASE) ============
     async sendVerificationCode() {
         const phoneInput = document.getElementById('phoneNumber');
         const countryCode = document.getElementById('countryCode').value;
         const language = document.getElementById('preferredLanguage').value;
-        
+
         if (!phoneInput) {
             console.error('Phone input element not found');
             this.showAlert('Error: No se encontró el campo de teléfono');
             return;
         }
-        
+
         const phoneNumber = phoneInput.value;
         console.log('Valor del input:', phoneNumber);
-        
+
         if (!phoneNumber || phoneNumber.trim() === '') {
             this.showAlert('Por favor ingresa tu número de teléfono');
             return;
         }
-        
+
         // Limpiar y validar número
         const cleanPhone = phoneNumber.replace(/\D/g, '');
         console.log('Número limpio:', cleanPhone);
-        
+
         if (cleanPhone.length < 10) {
             this.showAlert('Número de teléfono demasiado corto (mínimo 10 dígitos)');
             return;
         }
-        
+
         const fullPhone = countryCode + cleanPhone;
         console.log('Número completo a enviar:', fullPhone);
-        
-        this.showLoading('Configurando verificación...');
-        
+
+        this.showLoading('Enviando código SMS...');
+
         try {
-            // Primero verificar que Firebase esté disponible
-            if (typeof sendSMSVerification === 'undefined') {
-                throw new Error('Firebase no está configurado correctamente');
-            }
-            
-            console.log('Iniciando proceso de verificación SMS...');
-            this.showLoading('Enviando código SMS...');
-            
-            // Enviar código SMS con Firebase
-            const result = await sendSMSVerification(fullPhone);
-            console.log('Resultado de verificación:', result);
-            
-            if (result && result.success) {
-                document.getElementById('phoneDisplay').textContent = fullPhone;
-                localStorage.setItem('userLanguage', language);
-                localStorage.setItem('userPhone', fullPhone);
-                this.hideLoading();
-                this.switchToVerification();
-                this.showAlert('¡Código enviado exitosamente!');
-                console.log('Código enviado exitosamente a:', fullPhone);
-            } else {
-                this.hideLoading();
-                const errorMsg = result?.error || 'Error desconocido al enviar código';
-                this.showAlert(errorMsg);
-                console.error('Error en envío de SMS:', errorMsg);
-            }
+            // Simular envío de SMS
+            await this.delay(2000);
+
+            document.getElementById('phoneDisplay').textContent = fullPhone;
+            localStorage.setItem('userLanguage', language);
+            localStorage.setItem('userPhone', fullPhone);
+            this.hideLoading();
+            this.switchToVerification();
+            this.showAlert(`¡Código enviado! Usa: ${this.mockVerificationCode}`);
+            console.log('Código de prueba:', this.mockVerificationCode);
+
         } catch (error) {
             this.hideLoading();
             console.error('Error completo:', error);
-            
-            let userMessage = 'Error al enviar código SMS';
-            if (error.message.includes('Firebase')) {
-                userMessage = 'Error de configuración. Recarga la página e intenta de nuevo.';
-            } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                userMessage = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
-            } else if (error.code) {
-                userMessage = `Error Firebase: ${error.code}`;
-            }
-            
-            this.showAlert(userMessage);
+            this.showAlert('Error al enviar código SMS');
         }
     }
-    
+
     switchToVerification() {
         document.getElementById('phoneForm').classList.add('hidden');
         document.getElementById('verificationForm').classList.remove('hidden');
         document.getElementById('authTitle').textContent = 'Verificación';
         document.getElementById('authSubtitle').textContent = 'Ingresa el código que enviamos a tu teléfono';
     }
-    
+
     changePhone() {
         document.getElementById('verificationForm').classList.add('hidden');
         document.getElementById('phoneForm').classList.remove('hidden');
         document.getElementById('authTitle').textContent = 'Bienvenido';
         document.getElementById('authSubtitle').textContent = 'Comunícate sin barreras lingüísticas';
-        
+
         // Clear code inputs
         document.querySelectorAll('.code-digit').forEach(input => input.value = '');
     }
-    
+
     async verifyCode() {
         const codeInputs = document.querySelectorAll('.code-digit');
         const code = Array.from(codeInputs).map(input => input.value).join('');
-        
+
         if (code.length !== 6) {
             this.showAlert('Por favor ingresa el código completo');
             return;
         }
-        
-        if (!window.confirmationResult) {
-            this.showAlert('Error: No hay código pendiente de verificación');
-            return;
-        }
-        
+
         this.showLoading('Verificando...');
-        
+
         try {
-            // Verificar código con Firebase
-            const result = await verifySMSCode(code);
-            
-            if (result.success) {
-                this.firebaseUser = result.user;
-                
+            // Simular verificación (en lugar de Firebase)
+            await this.delay(1500);
+
+            if (code === this.mockVerificationCode) {
+                // Crear usuario mock
+                this.currentUser = {
+                    uid: 'user_' + Date.now(),
+                    phone: localStorage.getItem('userPhone'),
+                    name: 'Usuario',
+                    language: localStorage.getItem('userLanguage') || 'es'
+                };
+
                 // Guardar información de sesión
                 localStorage.setItem('userAuthenticated', 'true');
-                localStorage.setItem('userId', result.user.uid);
-                
-                // Actualizar estado en línea
-                await updateUserOnlineStatus(result.user.uid, true);
-                
+                localStorage.setItem('userId', this.currentUser.uid);
+                localStorage.setItem('userData', JSON.stringify(this.currentUser));
+
                 this.hideLoading();
-                
+
                 // Si es primera vez, mostrar tutorial, si no ir directo a la app
                 const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
                 if (hasSeenTutorial === 'true') {
@@ -386,7 +309,7 @@ class EZTranslateApp {
                 }
             } else {
                 this.hideLoading();
-                this.showAlert('Código incorrecto. Intenta de nuevo.');
+                this.showAlert('Código incorrecto. Usa: ' + this.mockVerificationCode);
                 // Limpiar campos de código
                 codeInputs.forEach(input => input.value = '');
                 codeInputs[0].focus();
@@ -400,37 +323,37 @@ class EZTranslateApp {
             codeInputs[0].focus();
         }
     }
-    
+
     async resendCode() {
         this.showLoading('Reenviando código...');
         await this.delay(1000);
         this.hideLoading();
-        this.showAlert('Código reenviado exitosamente');
+        this.showAlert('Código reenviado: ' + this.mockVerificationCode);
     }
-    
+
     // ============ TUTORIAL FUNCTIONS ============
     startTutorial() {
         document.getElementById('authContainer').classList.add('hidden');
         document.getElementById('tutorialContainer').classList.remove('hidden');
         this.appState = 'tutorial';
     }
-    
+
     nextSlide() {
         if (this.currentSlide < this.maxSlides - 1) {
             this.currentSlide++;
             this.updateSlide();
         }
-        
+
         if (this.currentSlide === this.maxSlides - 1) {
             document.querySelector('.next-btn').classList.add('hidden');
             document.querySelector('.start-btn').classList.remove('hidden');
         }
     }
-    
+
     goToSlide(slideIndex) {
         this.currentSlide = slideIndex;
         this.updateSlide();
-        
+
         if (this.currentSlide === this.maxSlides - 1) {
             document.querySelector('.next-btn').classList.add('hidden');
             document.querySelector('.start-btn').classList.remove('hidden');
@@ -439,58 +362,58 @@ class EZTranslateApp {
             document.querySelector('.start-btn').classList.add('hidden');
         }
     }
-    
+
     updateSlide() {
         // Hide all slides
         document.querySelectorAll('.tutorial-slide').forEach(slide => {
             slide.classList.remove('active');
         });
-        
+
         // Show current slide
         document.querySelector(`[data-slide="${this.currentSlide}"]`).classList.add('active');
-        
+
         // Update indicators
         document.querySelectorAll('.indicator').forEach((indicator, index) => {
             indicator.classList.toggle('active', index === this.currentSlide);
         });
     }
-    
+
     skipTutorial() {
         this.startApp();
     }
-    
+
     startApp() {
         document.getElementById('tutorialContainer').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
         this.appState = 'main';
-        
+
         // Marcar tutorial como visto
         localStorage.setItem('hasSeenTutorial', 'true');
-        
+
         // Show placeholder initially
         const chatMain = document.querySelector('.chat-main');
         if (chatMain) {
             chatMain.classList.add('show-placeholder');
         }
-        
+
         this.renderChatList();
     }
-    
+
     // ============ NUEVA IMPLEMENTACIÓN DE CHAT ============
     loadMockData() {
         // Initialize with empty state
         this.chatConversations = new Map();
         this.currentActiveChat = null;
         this.isRecordingVoice = false;
-        
+
         // Initialize sound settings
         this.soundEnabled = true;
         this.createSoundEffects();
-        
+
         // Load some example contacts for demo
         this.loadExampleContacts();
     }
-    
+
     loadExampleContacts() {
         // Add some example contacts after a delay to simulate loading
         setTimeout(() => {
@@ -500,7 +423,7 @@ class EZTranslateApp {
             this.updateChatsList();
         }, 2000);
     }
-    
+
     addExampleContact(name, phone, avatar, language) {
         const chatId = phone;
         this.chatConversations.set(chatId, {
@@ -514,82 +437,82 @@ class EZTranslateApp {
             lastMessageTime: new Date()
         });
     }
-    
+
     createSoundEffects() {
         // Create audio context for sound effects
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
+
             // Create send message sound (short beep)
             this.createSendSound();
-            
+
             // Create receive message sound (notification)
             this.createReceiveSound();
         } catch (e) {
             console.log('Audio context not supported');
         }
     }
-    
+
     createSendSound() {
         this.sendSound = () => {
             if (!this.soundEnabled || !this.audioContext) return;
-            
+
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
-            
+
             oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
             oscillator.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.1);
-            
+
             gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-            
+
             oscillator.start(this.audioContext.currentTime);
             oscillator.stop(this.audioContext.currentTime + 0.1);
         };
     }
-    
+
     createReceiveSound() {
         this.receiveSound = () => {
             if (!this.soundEnabled || !this.audioContext) return;
-            
+
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
-            
+
             oscillator.frequency.setValueAtTime(600, this.audioContext.currentTime);
             oscillator.frequency.exponentialRampToValueAtTime(900, this.audioContext.currentTime + 0.15);
-            
+
             gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
-            
+
             oscillator.start(this.audioContext.currentTime);
             oscillator.stop(this.audioContext.currentTime + 0.15);
         };
     }
-    
+
     updateChatsList() {
         const chatsList = document.getElementById('chatsList');
         const emptyChats = document.getElementById('emptyChats');
-        
+
         if (this.chatConversations.size === 0) {
             emptyChats.style.display = 'flex';
             return;
         }
-        
+
         emptyChats.style.display = 'none';
-        
+
         // Clear current list
         chatsList.innerHTML = '';
-        
+
         // Add chat items
         this.chatConversations.forEach((chat, chatId) => {
             const lastMessage = chat.messages[chat.messages.length - 1];
-            
+
             const chatItem = document.createElement('div');
             chatItem.className = 'chat-list-item';
             chatItem.style.cssText = `
@@ -600,7 +523,7 @@ class EZTranslateApp {
                 cursor: pointer;
                 transition: background 0.3s ease;
             `;
-            
+
             chatItem.innerHTML = `
                 <div style="
                     width: 50px;
@@ -636,34 +559,34 @@ class EZTranslateApp {
                     text-align: right;
                 ">${lastMessage ? this.formatTime(lastMessage.timestamp) : ''}</div>
             `;
-            
+
             chatItem.addEventListener('mouseenter', () => {
                 chatItem.style.background = '#f8f9fa';
             });
-            
+
             chatItem.addEventListener('mouseleave', () => {
                 chatItem.style.background = 'transparent';
             });
-            
+
             chatItem.addEventListener('click', () => {
                 this.openChatConversation(chatId);
             });
-            
+
             chatsList.appendChild(chatItem);
         });
     }
-    
+
     openChatConversation(chatId) {
         const chat = this.chatConversations.get(chatId);
         if (!chat) return;
-        
+
         this.currentActiveChat = chatId;
-        
+
         // Hide chat list and show chat view
         document.getElementById('chatListView').style.display = 'none';
         document.getElementById('chatView').classList.remove('hidden');
         document.getElementById('chatView').style.display = 'flex';
-        
+
         // Hide bottom navigation
         const bottomNav = document.querySelector('.bottom-nav');
         if (bottomNav) {
@@ -671,26 +594,26 @@ class EZTranslateApp {
             bottomNav.style.visibility = 'hidden';
             bottomNav.style.opacity = '0';
         }
-        
+
         // Update chat header
         document.getElementById('currentContactAvatar').textContent = chat.avatar;
         document.getElementById('currentContactName').textContent = chat.name;
         document.getElementById('currentContactStatus').textContent = chat.status;
-        
+
         // Render messages
         this.renderChatMessages(chatId);
-        
+
         // Focus message input
         document.getElementById('messageTextInput').focus();
     }
-    
+
     renderChatMessages(chatId) {
         const chat = this.chatConversations.get(chatId);
         if (!chat) return;
-        
+
         const messagesArea = document.getElementById('messagesArea');
         messagesArea.innerHTML = '';
-        
+
         if (chat.messages.length === 0) {
             messagesArea.innerHTML = `
                 <div style="
@@ -712,7 +635,7 @@ class EZTranslateApp {
             `;
             return;
         }
-        
+
         chat.messages.forEach((message, index) => {
             const messageElement = document.createElement('div');
             messageElement.style.cssText = `
@@ -721,7 +644,7 @@ class EZTranslateApp {
                 margin-bottom: 16px;
                 animation: slideInMessage 0.3s ease;
             `;
-            
+
             messageElement.innerHTML = `
                 <div style="
                     max-width: 70%;
@@ -753,31 +676,31 @@ class EZTranslateApp {
                     ">${this.formatTime(message.timestamp)}</div>
                 </div>
             `;
-            
+
             messagesArea.appendChild(messageElement);
         });
-        
+
         // Scroll to bottom
         setTimeout(() => {
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }, 100);
     }
-    
+
     async sendNewMessage() {
         const input = document.getElementById('messageTextInput');
         const text = input.value.trim();
-        
+
         if (!text || !this.currentActiveChat) return;
-        
+
         const chat = this.chatConversations.get(this.currentActiveChat);
         if (!chat) return;
-        
+
         // Clear input immediately
         input.value = '';
-        
+
         // Play send sound
         if (this.sendSound) this.sendSound();
-        
+
         try {
             // Create message
             const message = {
@@ -788,32 +711,32 @@ class EZTranslateApp {
                 isSent: true,
                 timestamp: new Date()
             };
-            
+
             // Add message to chat
             chat.messages.push(message);
             chat.lastMessageTime = new Date();
-            
+
             // Update UI
             this.renderChatMessages(this.currentActiveChat);
             this.updateChatsList();
-            
+
             // Simulate response after delay
             setTimeout(() => {
                 this.simulateMessageResponse();
             }, 1000 + Math.random() * 2000);
-            
+
         } catch (error) {
             console.error('Error sending message:', error);
             this.showAlert('Error al enviar mensaje. Intenta de nuevo.');
         }
     }
-    
+
     async simulateMessageResponse() {
         if (!this.currentActiveChat) return;
-        
+
         const chat = this.chatConversations.get(this.currentActiveChat);
         if (!chat) return;
-        
+
         const responses = [
             'That sounds great!',
             'I understand perfectly.',
@@ -826,9 +749,9 @@ class EZTranslateApp {
             'I see what you mean.',
             'Absolutely right!'
         ];
-        
+
         const responseText = responses[Math.floor(Math.random() * responses.length)];
-        
+
         try {
             const response = {
                 id: Date.now().toString(),
@@ -838,28 +761,28 @@ class EZTranslateApp {
                 isSent: false,
                 timestamp: new Date()
             };
-            
+
             // Play receive sound
             if (this.receiveSound) this.receiveSound();
-            
+
             // Add response to chat
             chat.messages.push(response);
             chat.lastMessageTime = new Date();
-            
+
             // Update UI
             this.renderChatMessages(this.currentActiveChat);
             this.updateChatsList();
-            
+
         } catch (error) {
             console.error('Error simulating response:', error);
         }
     }
-    
+
     async translateText(text, fromLang, toLang) {
         if (fromLang === toLang) {
             return text;
         }
-        
+
         try {
             // Usar LibreTranslate API para traducción real
             const response = await this.callLibreTranslateAPI(text, fromLang, toLang);
@@ -870,7 +793,7 @@ class EZTranslateApp {
             console.error('Error con LibreTranslate API:', error);
             // Fallback a traducción local en caso de error
         }
-        
+
         // Fallback mejorado con más traducciones
         const translations = {
             'es-en': {
@@ -967,24 +890,24 @@ class EZTranslateApp {
                 'je ne comprends pas': 'i don\'t understand'
             }
         };
-        
+
         const translationKey = `${fromLang}-${toLang}`;
         const translationMap = translations[translationKey] || {};
-        
+
         const lowerText = text.toLowerCase();
-        
+
         // Check for exact matches first
         if (translationMap[lowerText]) {
             return translationMap[lowerText];
         }
-        
+
         // Check for partial matches
         for (const [original, translated] of Object.entries(translationMap)) {
             if (lowerText.includes(original)) {
                 return text.replace(new RegExp(original, 'gi'), translated);
             }
         }
-        
+
         // Language-specific fallbacks
         const languageNames = {
             'es': 'Español',
@@ -1000,7 +923,7 @@ class EZTranslateApp {
             'ru': 'Русский',
             'hi': 'हिन्दी'
         };
-        
+
         return `[${languageNames[toLang] || toLang.toUpperCase()}] ${text}`;
     }
 
@@ -1026,9 +949,9 @@ class EZTranslateApp {
             const sourceLang = langMap[fromLang] || fromLang.split('-')[0];
             const targetLang = langMap[toLang] || toLang.split('-')[0];
 
-            // Usar API pública de LibreTranslate (puedes cambiar la URL)
+            // Usar API pública de LibreTranslate (puedes cambiar la URL)```python
             const apiUrl = 'https://libretranslate.de/translate';
-            
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -1057,17 +980,17 @@ class EZTranslateApp {
             throw error;
         }
     }
-    
+
     // ============ NEW CHAT FUNCTIONS ============
     openNewChatSection() {
         this.switchSection('newChat');
         this.loadPhoneContacts();
         this.setupContactSearch();
     }
-    
+
     async loadPhoneContacts() {
         const contactsList = document.getElementById('phoneContactsList');
-        
+
         // Show loading state
         contactsList.innerHTML = `
             <div class="contacts-loading">
@@ -1075,7 +998,7 @@ class EZTranslateApp {
                 <span>Cargando contactos...</span>
             </div>
         `;
-        
+
         try {
             // Try to access contacts API (this is limited in web browsers)
             if ('contacts' in navigator && 'ContactsManager' in window) {
@@ -1092,7 +1015,7 @@ class EZTranslateApp {
             this.renderMockContacts();
         }
     }
-    
+
     renderMockContacts() {
         const mockContacts = [
             { name: 'Ana García', phone: '+52 555 123 4567', avatar: 'A' },
@@ -1106,13 +1029,13 @@ class EZTranslateApp {
             { name: 'Elena Jiménez', phone: '+34 645 123 789', avatar: 'E' },
             { name: 'Michael Johnson', phone: '+1 555 369 2580', avatar: 'M' }
         ];
-        
+
         this.renderPhoneContacts(mockContacts);
     }
-    
+
     renderPhoneContacts(contacts) {
         const contactsList = document.getElementById('phoneContactsList');
-        
+
         if (!contacts || contacts.length === 0) {
             contactsList.innerHTML = `
                 <div class="contacts-empty">
@@ -1123,7 +1046,7 @@ class EZTranslateApp {
             `;
             return;
         }
-        
+
         contactsList.innerHTML = contacts.map(contact => `
             <div class="contact-item" data-name="${contact.name.toLowerCase()}" data-phone="${contact.phone}">
                 <div class="contact-avatar-img">
@@ -1144,27 +1067,27 @@ class EZTranslateApp {
             </div>
         `).join('');
     }
-    
+
     setupContactSearch() {
         const searchInput = document.getElementById('contactSearchInput');
         if (!searchInput) return;
-        
+
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase().trim();
             this.filterContacts(searchTerm);
         });
     }
-    
+
     filterContacts(searchTerm) {
         const contactItems = document.querySelectorAll('.contact-item');
-        
+
         contactItems.forEach(item => {
             const name = item.dataset.name || '';
             const phone = item.dataset.phone || '';
-            
+
             const matchesSearch = name.includes(searchTerm) || 
                                 phone.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, ''));
-            
+
             if (matchesSearch) {
                 item.style.display = 'flex';
             } else {
@@ -1172,14 +1095,14 @@ class EZTranslateApp {
             }
         });
     }
-    
+
     callContact(phone) {
         this.showAlert(`Llamando a ${phone}...`);
         this.switchSection('calls');
         this.showDialer();
         document.getElementById('dialNumber').value = phone.replace(/\s+/g, '');
     }
-    
+
     startChatWithContact(name, phone) {
         // Create or find existing contact
         if (!this.contacts.has(phone)) {
@@ -1191,34 +1114,35 @@ class EZTranslateApp {
                 status: 'offline'
             });
         }
-        
+
         // Initialize empty messages array if needed
         if (!this.messages.has(phone)) {
             this.messages.set(phone, []);
         }
-        
+
         // Switch to chats section and open the chat
         this.switchSection('chats');
         this.renderChatList();
-        
+
         // Small delay to ensure UI is ready
         setTimeout(() => {
             this.openChat(phone);
         }, 100);
-        
+
         this.showAlert(`Chat iniciado con ${name}`);
     }
-    
+
     openSettings() {
         this.showAlert('Configuración próximamente disponible');
     }
-    
+
     logout() {
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            localStorage.clear();
             location.reload();
         }
     }
-    
+
     getLanguageDisplay(langCode) {
         const languages = {
             'es': '🇪🇸 Español',
@@ -1230,21 +1154,21 @@ class EZTranslateApp {
         };
         return languages[langCode] || langCode;
     }
-    
+
     formatTime(date) {
         const now = new Date();
         const diff = now - date;
-        
+
         if (diff < 60000) return 'Ahora';
         if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
         if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-        
+
         return date.toLocaleDateString('es-ES', { 
             day: '2-digit', 
             month: '2-digit' 
         });
     }
-    
+
     showLoading(text = 'Cargando...') {
         let loadingOverlay = document.getElementById('loadingOverlay');
         if (!loadingOverlay) {
@@ -1272,7 +1196,7 @@ class EZTranslateApp {
                     <div id="loadingText">${text}</div>
                 </div>
             `;
-            
+
             // Add spinner animation
             if (!document.querySelector('#spinnerStyles')) {
                 const style = document.createElement('style');
@@ -1285,7 +1209,7 @@ class EZTranslateApp {
                 `;
                 document.head.appendChild(style);
             }
-            
+
             document.body.appendChild(loadingOverlay);
         } else {
             const loadingText = document.getElementById('loadingText');
@@ -1296,7 +1220,7 @@ class EZTranslateApp {
             loadingOverlay.style.display = 'flex';
         }
     }
-    
+
     hideLoading() {
         const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) {
@@ -1304,39 +1228,39 @@ class EZTranslateApp {
             loadingOverlay.style.display = 'none';
         }
     }
-    
+
     goBackToChats() {
         const chatMain = document.querySelector('.chat-main');
         const chatSidebar = document.querySelector('.chat-sidebar');
         const noChat = document.querySelector('.no-chat-selected');
         const activeChat = document.getElementById('activeChat');
         const bottomNav = document.querySelector('.bottom-nav');
-        
+
         // Clear current chat first
         this.currentChat = null;
-        
+
         // Show sidebar and hide active chat
         chatSidebar.classList.remove('chat-open');
         chatMain.classList.remove('active');
-        
+
         // Show bottom navigation again
         if (bottomNav) {
             bottomNav.style.transform = 'translateY(0)';
             bottomNav.style.visibility = 'visible';
             bottomNav.style.opacity = '1';
         }
-        
+
         // Hide active chat
         if (activeChat) {
             activeChat.classList.add('hidden');
             activeChat.style.display = 'none';
         }
-        
+
         // Remove active styling from chat items
         document.querySelectorAll('.chat-item').forEach(item => {
             item.classList.remove('active');
         });
-        
+
         // Show placeholder only if no contacts exist
         if (this.contacts.size === 0) {
             chatMain.classList.add('show-placeholder');
@@ -1361,8 +1285,8 @@ class EZTranslateApp {
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: #ff4757;
-            color: white;
+            background: #00d4aa;
+            color: #000;
             padding: 16px 24px;
             border-radius: 8px;
             font-weight: 600;
@@ -1371,7 +1295,7 @@ class EZTranslateApp {
             animation: slideDown 0.3s ease;
         `;
         alertDiv.textContent = message;
-        
+
         // Add animation keyframes
         if (!document.querySelector('#alertStyles')) {
             const style = document.createElement('style');
@@ -1384,42 +1308,42 @@ class EZTranslateApp {
             `;
             document.head.appendChild(style);
         }
-        
+
         document.body.appendChild(alertDiv);
-        
+
         setTimeout(() => {
             alertDiv.remove();
         }, 3000);
     }
-    
+
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    
+
     // ============ NAVIGATION FUNCTIONS ============
     switchSection(section) {
         console.log('Switching to section:', section); // Debug log
-        
+
         // Hide all sections
         document.querySelectorAll('.section-container').forEach(container => {
             container.classList.remove('active');
             container.classList.add('hidden');
         });
-        
+
         // Remove active class from all nav items
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.remove('active');
         });
-        
+
         // Show selected section
         const sectionElement = document.getElementById(section + 'Section');
         console.log('Section element found:', sectionElement); // Debug log
-        
+
         if (sectionElement) {
             sectionElement.classList.add('active');
             sectionElement.classList.remove('hidden');
         }
-        
+
         // Add active class to selected nav item
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach((item, index) => {
@@ -1428,15 +1352,13 @@ class EZTranslateApp {
                 item.classList.add('active');
             }
         });
-        
-        // Header has been completely removed, no need for visibility logic
-        
+
         // Update settings if switching to settings
         if (section === 'settings') {
             this.updateSettingsDisplay();
         }
     }
-    
+
     updateSettingsDisplay() {
         if (this.currentUser) {
             document.getElementById('settingsUserName').textContent = this.currentUser.name;
@@ -1444,21 +1366,21 @@ class EZTranslateApp {
             document.getElementById('settingsUserLanguage').textContent = this.getLanguageDisplay(this.currentUser.language);
         }
     }
-    
+
     // ============ VOICE TRANSLATOR FUNCTIONS ============
     swapVoiceLanguages() {
         const fromLang = document.getElementById('voiceFromLanguage');
         const toLang = document.getElementById('voiceToLanguage');
-        
+
         // Swap language values
         const tempValue = fromLang.value;
         fromLang.value = toLang.value;
         toLang.value = tempValue;
-        
+
         // Clear previous translations
         this.clearVoiceTranslation();
     }
-    
+
     async toggleVoiceRecording() {
         if (this.isVoiceRecording) {
             this.stopVoiceRecording();
@@ -1466,7 +1388,7 @@ class EZTranslateApp {
             await this.startVoiceRecording();
         }
     }
-    
+
     async startVoiceRecording() {
         try {
             // Check for microphone permission and start recording
@@ -1478,37 +1400,34 @@ class EZTranslateApp {
                     noiseSuppression: true
                 }
             });
-            
+
             this.isVoiceRecording = true;
             this.updateRecordingUI(true);
-            
+
             // Clear previous content
             document.getElementById('originalTextContent').textContent = '';
             document.getElementById('translatedTextContent').textContent = '';
-            
-            // Start audio recording for voice cloning
-            await this.startAudioRecording();
-            
+
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 this.speechRecognition = new SpeechRecognition();
-                
+
                 // Auto-detect language or use selected language
                 const fromLang = document.getElementById('voiceFromLanguage').value;
                 this.speechRecognition.lang = fromLang;
                 this.speechRecognition.continuous = true;
                 this.speechRecognition.interimResults = true;
                 this.speechRecognition.maxAlternatives = 1;
-                
+
                 this.speechRecognition.onstart = () => {
                     console.log('Speech recognition started');
                 };
-                
+
                 this.speechRecognition.onresult = async (event) => {
                     let interimTranscript = '';
                     let finalTranscript = '';
-                    
+
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         const transcript = event.results[i][0].transcript;
                         if (event.results[i].isFinal) {
@@ -1517,33 +1436,33 @@ class EZTranslateApp {
                             interimTranscript += transcript;
                         }
                     }
-                    
+
                     // Update original text in real time
                     const originalTextEl = document.getElementById('originalTextContent');
                     const translatedTextEl = document.getElementById('translatedTextContent');
-                    
+
                     // Show real-time text detection
                     if (interimTranscript.trim() || finalTranscript.trim()) {
                         // Display current speech with interim results
                         const displayText = finalTranscript + interimTranscript;
                         originalTextEl.textContent = displayText.trim();
-                        
-                        // Auto-translate in real time with LibreTranslate
+
+                        // Auto-translate in real time
                         if (displayText.trim()) {
                             const fromLang = document.getElementById('voiceFromLanguage').value.split('-')[0];
                             const toLang = document.getElementById('voiceToLanguage').value.split('-')[0];
-                            
+
                             try {
                                 // Mostrar indicador de traducción
                                 translatedTextEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traduciendo...';
-                                
+
                                 const translation = await this.translateText(displayText.trim(), fromLang, toLang);
                                 translatedTextEl.textContent = translation;
-                                
-                                // Speak translation automatically for final text with cloned voice
+
+                                // Speak translation automatically for final text
                                 if (finalTranscript.trim()) {
                                     setTimeout(() => {
-                                        this.speakText(translation, document.getElementById('voiceToLanguage').value, true);
+                                        this.speakText(translation, document.getElementById('voiceToLanguage').value);
                                     }, 200);
                                 }
                             } catch (error) {
@@ -1553,7 +1472,7 @@ class EZTranslateApp {
                         }
                     }
                 };
-                
+
                 this.speechRecognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
                     if (event.error === 'not-allowed') {
@@ -1568,7 +1487,7 @@ class EZTranslateApp {
                     }
                     this.stopVoiceRecording();
                 };
-                
+
                 this.speechRecognition.onend = () => {
                     console.log('Speech recognition ended');
                     if (this.isVoiceRecording) {
@@ -1585,13 +1504,13 @@ class EZTranslateApp {
                         }, 100);
                     }
                 };
-                
+
                 this.speechRecognition.start();
             } else {
                 this.showAlert('El reconocimiento de voz no está disponible en este navegador. Usa Chrome o Edge.');
                 this.stopVoiceRecording();
             }
-            
+
         } catch (error) {
             console.error('Error accessing microphone:', error);
             if (error.name === 'NotAllowedError') {
@@ -1603,75 +1522,25 @@ class EZTranslateApp {
         }
     }
 
-    async startAudioRecording() {
-        try {
-            // Initialize MediaRecorder para capturar audio para clonación de voz
-            if (this.mediaStream) {
-                this.mediaRecorder = new MediaRecorder(this.mediaStream, {
-                    mimeType: 'audio/webm;codecs=opus'
-                });
-                
-                this.audioChunks = [];
-                
-                this.mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        this.audioChunks.push(event.data);
-                    }
-                };
-                
-                this.mediaRecorder.onstop = () => {
-                    // Crear blob de audio para muestra de voz
-                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                    this.processVoiceSample(audioBlob);
-                };
-                
-                // Comenzar grabación de audio
-                this.mediaRecorder.start(1000); // Capturar datos cada segundo
-                console.log('Audio recording started for voice cloning');
-            }
-        } catch (error) {
-            console.error('Error starting audio recording:', error);
-        }
-    }
-
-    async processVoiceSample(audioBlob) {
-        try {
-            // Convertir a base64 para enviar a API de clonación
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                this.userVoiceSample = reader.result.split(',')[1]; // Remover prefijo data:
-                console.log('Voice sample processed for cloning');
-            };
-            reader.readAsDataURL(audioBlob);
-        } catch (error) {
-            console.error('Error processing voice sample:', error);
-        }
-    }
-    
     stopVoiceRecording() {
         this.isVoiceRecording = false;
         this.updateRecordingUI(false);
-        
+
         if (this.speechRecognition) {
             this.speechRecognition.stop();
             this.speechRecognition = null;
         }
-        
-        // Detener grabación de audio
-        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-            this.mediaRecorder.stop();
-        }
-        
+
         // Cerrar stream de media
         if (this.mediaStream) {
             this.mediaStream.getTracks().forEach(track => track.stop());
             this.mediaStream = null;
         }
     }
-    
+
     updateRecordingUI(isRecording) {
         const recordBtn = document.getElementById('mainRecordBtn');
-        
+
         if (isRecording) {
             recordBtn.classList.add('recording');
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-stop';
@@ -1680,203 +1549,68 @@ class EZTranslateApp {
             recordBtn.querySelector('.mic-icon i').className = 'fas fa-microphone';
         }
     }
-    
-    
-    
-    async translateVoiceText(text) {
-        const fromLang = document.getElementById('voiceFromLanguage').value.split('-')[0];
-        const toLang = document.getElementById('voiceToLanguage').value.split('-')[0];
-        
-        try {
-            // Show translation loading with animation
-            const translatedEl = document.getElementById('translatedTextContent');
-            translatedEl.innerHTML = '<span style="opacity: 0.6;">Traduciendo<span class="dots">...</span></span>';
-            
-            // Animate dots
-            const dots = translatedEl.querySelector('.dots');
-            let dotCount = 0;
-            const dotInterval = setInterval(() => {
-                dotCount = (dotCount + 1) % 4;
-                dots.textContent = '.'.repeat(dotCount);
-            }, 300);
-            
-            const translation = await this.translateText(text, fromLang, toLang);
-            
-            // Clear dot animation
-            clearInterval(dotInterval);
-            
-            // Show translation with typing effect
-            translatedEl.textContent = '';
-            await this.typeText(translatedEl, translation);
-            
-            // Automatically speak the translation after a short delay
-            setTimeout(async () => {
-                await this.speakText(translation, document.getElementById('voiceToLanguage').value);
-            }, 500);
-            
-        } catch (error) {
-            console.error('Translation error:', error);
-            document.getElementById('translatedTextContent').textContent = 'Error en la traducción. Intenta de nuevo.';
-        }
-    }
-    
-    async typeText(element, text, speed = 30) {
-        element.textContent = '';
-        for (let i = 0; i < text.length; i++) {
-            element.textContent += text.charAt(i);
-            await new Promise(resolve => setTimeout(resolve, speed));
-        }
-    }
-    
-    async speakText(text, lang, useClonedVoice = true) {
+
+    async speakText(text, lang) {
         if (!text) return;
-        
+
         try {
-            if (useClonedVoice && this.userVoiceSample) {
-                // Usar síntesis de voz clonada con Bark/Tortoise TTS
-                await this.generateClonedVoice(text, lang);
-            } else {
-                // Fallback a síntesis nativa del navegador
-                await this.speakWithBrowserTTS(text, lang);
-            }
+            await this.speakWithBrowserTTS(text, lang);
         } catch (error) {
             console.error('Error en síntesis de voz:', error);
-            // Fallback a TTS nativo
-            await this.speakWithBrowserTTS(text, lang);
         }
     }
 
     async speakWithBrowserTTS(text, lang) {
         if (!('speechSynthesis' in window)) return;
-        
+
         try {
             // Cancel any ongoing speech
             speechSynthesis.cancel();
-            
+
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = lang;
             utterance.rate = 0.9;
             utterance.pitch = 1;
             utterance.volume = 1;
-            
+
             // Try to find a better voice for the language
             const voices = speechSynthesis.getVoices();
             const preferredVoice = voices.find(voice => 
                 voice.lang.startsWith(lang.split('-')[0]) && 
                 (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.localService === false)
             );
-            
+
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
             }
-            
+
             speechSynthesis.speak(utterance);
         } catch (error) {
             console.error('Browser TTS error:', error);
         }
     }
 
-    // Nueva función para síntesis de voz clonada
-    async generateClonedVoice(text, lang) {
-        try {
-            // Aquí integrarías con Bark o Tortoise TTS API
-            // Por ahora simularemos la llamada
-            console.log('Generando voz clonada para:', text);
-            
-            // Simular delay de generación
-            await this.delay(1000);
-            
-            // En una implementación real, enviarías:
-            // - El texto a sintetizar
-            // - La muestra de voz del usuario (this.userVoiceSample)
-            // - El idioma objetivo
-            // Y recibirías un archivo de audio para reproducir
-            
-            const audioData = await this.callVoiceCloningAPI(text, lang, this.userVoiceSample);
-            if (audioData) {
-                await this.playGeneratedAudio(audioData);
-            } else {
-                // Fallback a TTS nativo
-                await this.speakWithBrowserTTS(text, lang);
-            }
-        } catch (error) {
-            console.error('Error en clonación de voz:', error);
-            // Fallback a TTS nativo
-            await this.speakWithBrowserTTS(text, lang);
-        }
-    }
-
-    async callVoiceCloningAPI(text, lang, voiceSample) {
-        try {
-            // Aquí integrarías con Bark o Tortoise TTS
-            // Ejemplo de estructura para la API:
-            /*
-            const response = await fetch('https://api.bark-tts.com/synthesize', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer YOUR_API_KEY'
-                },
-                body: JSON.stringify({
-                    text: text,
-                    language: lang,
-                    voice_sample: voiceSample, // Base64 audio sample
-                    model: 'bark-v1' // o 'tortoise-tts'
-                })
-            });
-
-            const audioBlob = await response.blob();
-            return audioBlob;
-            */
-            
-            // Por ahora retornamos null para usar fallback
-            console.log('Llamada simulada a API de clonación de voz');
-            return null;
-        } catch (error) {
-            console.error('Error en API de clonación:', error);
-            return null;
-        }
-    }
-
-    async playGeneratedAudio(audioBlob) {
-        try {
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            
-            return new Promise((resolve, reject) => {
-                audio.onended = () => {
-                    URL.revokeObjectURL(audioUrl);
-                    resolve();
-                };
-                audio.onerror = reject;
-                audio.play();
-            });
-        } catch (error) {
-            console.error('Error reproduciendo audio generado:', error);
-        }
-    }
-    
     async playOriginalText() {
         const text = document.getElementById('originalTextContent').textContent;
         const lang = document.getElementById('voiceFromLanguage').value;
-        
+
         if (text && text !== 'Presiona el micrófono y comienza a hablar...') {
             await this.speakText(text, lang);
         }
     }
-    
+
     async playTranslatedText() {
         const text = document.getElementById('translatedTextContent').textContent;
         const lang = document.getElementById('voiceToLanguage').value;
-        
+
         if (text && text !== 'La traducción aparecerá aquí automáticamente...') {
             await this.speakText(text, lang);
         }
     }
-    
+
     copyVoiceTranslation() {
         const translatedText = document.getElementById('translatedTextContent').textContent;
-        
+
         if (translatedText && translatedText !== 'La traducción aparecerá aquí automáticamente...') {
             navigator.clipboard.writeText(translatedText).then(() => {
                 this.showAlert('Traducción copiada al portapapeles');
@@ -1887,17 +1621,17 @@ class EZTranslateApp {
             this.showAlert('No hay traducción para copiar');
         }
     }
-    
+
     shareVoiceTranslation() {
         const originalText = document.getElementById('originalTextContent').textContent;
         const translatedText = document.getElementById('translatedTextContent').textContent;
-        
+
         if (originalText && translatedText && 
             originalText !== 'Presiona el micrófono y comienza a hablar...' &&
             translatedText !== 'La traducción aparecerá aquí automáticamente...') {
-            
+
             const shareText = `Traducción de Voz BeDub:\n\nOriginal: ${originalText}\nTraducción: ${translatedText}`;
-            
+
             if (navigator.share) {
                 navigator.share({
                     title: 'Traducción de Voz BeDub',
@@ -1918,46 +1652,46 @@ class EZTranslateApp {
             this.showAlert('No hay traducción para compartir');
         }
     }
-    
+
     clearVoiceTranslation() {
         document.getElementById('originalTextContent').textContent = '';
         document.getElementById('translatedTextContent').textContent = '';
     }
-    
+
     // ============ CALLS FUNCTIONS ============
     showCallHistory() {
         document.getElementById('callHistory').classList.remove('hidden');
         document.getElementById('dialer').classList.add('hidden');
-        
+
         // Update active tab
         document.querySelectorAll('.call-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelector('[onclick="showCallHistory()"]').classList.add('active');
     }
-    
+
     showDialer() {
         document.getElementById('callHistory').classList.add('hidden');
         document.getElementById('dialer').classList.remove('hidden');
-        
+
         // Update active tab
         document.querySelectorAll('.call-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelector('[onclick="showDialer()"]').classList.add('active');
     }
-    
+
     openDialer() {
         this.switchSection('calls');
         this.showDialer();
     }
-    
+
     addDigit(digit) {
         const dialInput = document.getElementById('dialNumber');
         dialInput.value += digit;
     }
-    
+
     deleteDigit() {
         const dialInput = document.getElementById('dialNumber');
         dialInput.value = dialInput.value.slice(0, -1);
     }
-    
+
     makePhoneCall() {
         const number = document.getElementById('dialNumber').value;
         if (number) {
@@ -1973,17 +1707,17 @@ class EZTranslateApp {
         const callContactName = document.getElementById('callContactName');
         const callContactNumber = document.getElementById('callContactNumber');
         const callStatus = document.getElementById('callStatus');
-        
+
         callContactName.textContent = `Llamando a ${number}`;
         callContactNumber.textContent = number;
         callStatus.textContent = 'Conectando...';
-        
+
         callScreen.classList.add('active');
         callScreen.classList.remove('hidden');
-        
+
         // Play ringtone
         this.playRingtone();
-        
+
         // Simulate call connection
         setTimeout(() => {
             callStatus.textContent = 'Llamada en curso...';
@@ -1996,16 +1730,16 @@ class EZTranslateApp {
         const callScreen = document.getElementById('activeCallScreen');
         callScreen.classList.remove('active');
         callScreen.classList.add('hidden');
-        
+
         // Stop any sounds
         this.stopRingtone();
         this.playCallEndSound();
-        
+
         // Reset call controls
         document.getElementById('muteBtn').classList.remove('active');
         document.getElementById('speakerBtn').classList.remove('active');
         document.getElementById('callKeypad').classList.add('hidden');
-        
+
         // Clear dial number
         document.getElementById('dialNumber').value = '';
     }
@@ -2013,7 +1747,7 @@ class EZTranslateApp {
     toggleMute() {
         const muteBtn = document.getElementById('muteBtn');
         const icon = muteBtn.querySelector('i');
-        
+
         if (muteBtn.classList.contains('active')) {
             muteBtn.classList.remove('active');
             icon.className = 'fas fa-microphone';
@@ -2026,7 +1760,7 @@ class EZTranslateApp {
     toggleSpeaker() {
         const speakerBtn = document.getElementById('speakerBtn');
         const icon = speakerBtn.querySelector('i');
-        
+
         if (speakerBtn.classList.contains('active')) {
             speakerBtn.classList.remove('active');
             icon.className = 'fas fa-volume-up';
@@ -2050,7 +1784,7 @@ class EZTranslateApp {
     // Sound effects for calls
     playRingtone() {
         if (!this.audioContext) return;
-        
+
         this.ringtoneInterval = setInterval(() => {
             // Play ringtone pattern
             this.playTone(440, 0.5, 0.3); // A4 note
@@ -2069,7 +1803,7 @@ class EZTranslateApp {
 
     playCallConnectedSound() {
         if (!this.audioContext) return;
-        
+
         // Play ascending tones
         this.playTone(523, 0.1, 0.2); // C5
         setTimeout(() => this.playTone(659, 0.1, 0.2), 100); // E5
@@ -2078,7 +1812,7 @@ class EZTranslateApp {
 
     playCallEndSound() {
         if (!this.audioContext) return;
-        
+
         // Play descending tones
         this.playTone(659, 0.2, 0.3); // E5
         setTimeout(() => this.playTone(523, 0.2, 0.3), 200); // C5
@@ -2087,14 +1821,14 @@ class EZTranslateApp {
 
     playDTMFTone(digit) {
         if (!this.audioContext) return;
-        
+
         const dtmfFreqs = {
             '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
             '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
             '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
             '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
         };
-        
+
         const freqs = dtmfFreqs[digit];
         if (freqs) {
             this.playDualTone(freqs[0], freqs[1], 0.2, 0.3);
@@ -2103,44 +1837,44 @@ class EZTranslateApp {
 
     playTone(frequency, duration, volume = 0.3) {
         if (!this.audioContext) return;
-        
+
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
-        
+
         oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
         gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
-        
+
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + duration);
     }
 
     playDualTone(freq1, freq2, duration, volume = 0.3) {
         if (!this.audioContext) return;
-        
+
         const oscillator1 = this.audioContext.createOscillator();
         const oscillator2 = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
-        
+
         oscillator1.connect(gainNode);
         oscillator2.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
-        
+
         oscillator1.frequency.setValueAtTime(freq1, this.audioContext.currentTime);
         oscillator2.frequency.setValueAtTime(freq2, this.audioContext.currentTime);
-        
+
         gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
-        
+
         oscillator1.start(this.audioContext.currentTime);
         oscillator2.start(this.audioContext.currentTime);
         oscillator1.stop(this.audioContext.currentTime + duration);
         oscillator2.stop(this.audioContext.currentTime + duration);
     }
-    
+
     makeCall() {
         if (this.currentChat) {
             this.showAlert('Iniciando llamada...');
@@ -2150,7 +1884,7 @@ class EZTranslateApp {
             document.getElementById('dialNumber').value = this.currentChat;
         }
     }
-    
+
     makeVideoCall() {
         if (this.currentChat) {
             this.showAlert('Iniciando videollamada...');
@@ -2166,26 +1900,26 @@ class VoiceRecorder {
         this.recognition = null;
         this.initSpeechRecognition();
     }
-    
+
     initSpeechRecognition() {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             this.recognition = new SpeechRecognition();
             this.recognition.continuous = false;
             this.recognition.interimResults = false;
-            
+
             this.recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 document.getElementById('messageInput').value = transcript;
                 app.sendMessage();
             };
-            
+
             this.recognition.onend = () => {
                 this.stopRecording();
             };
         }
     }
-    
+
     toggleRecording() {
         if (this.isRecording) {
             this.stopRecording();
@@ -2193,28 +1927,32 @@ class VoiceRecorder {
             this.startRecording();
         }
     }
-    
+
     startRecording() {
         if (!this.recognition) {
             app.showAlert('El reconocimiento de voz no está disponible en este navegador');
             return;
         }
-        
+
         this.isRecording = true;
         const voiceBtn = document.getElementById('voiceRecordBtn');
-        voiceBtn.style.background = '#ff4757';
-        voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
-        
+        if (voiceBtn) {
+            voiceBtn.style.background = '#ff4757';
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+        }
+
         this.recognition.lang = app.currentUser?.language || 'es';
         this.recognition.start();
     }
-    
+
     stopRecording() {
         this.isRecording = false;
         const voiceBtn = document.getElementById('voiceRecordBtn');
-        voiceBtn.style.background = '#00d4aa';
-        voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-        
+        if (voiceBtn) {
+            voiceBtn.style.background = '#00d4aa';
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        }
+
         if (this.recognition) {
             this.recognition.stop();
         }
@@ -2227,7 +1965,7 @@ let app, voiceRecorder;
 document.addEventListener('DOMContentLoaded', () => {
     app = new EZTranslateApp();
     voiceRecorder = new VoiceRecorder();
-    
+
     // Voice recording button
     const voiceBtn = document.getElementById('voiceRecordBtn');
     if (voiceBtn) {
@@ -2264,8 +2002,6 @@ function startApp() {
     app.startApp();
 }
 
-
-
 function openSettings() {
     app.openSettings();
 }
@@ -2282,7 +2018,7 @@ function goBackToChats() {
 function showNewChatModal() {
     const modal = document.getElementById('newChatModal');
     modal.classList.remove('hidden');
-    
+
     // Load suggested contacts
     loadSuggestedContacts();
 }
@@ -2300,7 +2036,7 @@ function loadSuggestedContacts() {
         { name: 'David Wilson', phone: '+1 555 246 8135', avatar: 'D' },
         { name: 'Sofia Herrera', phone: '+52 55 1357 9246', avatar: 'S' }
     ];
-    
+
     contactsGrid.innerHTML = mockContacts.map(contact => `
         <div style="
             display: flex;
@@ -2343,7 +2079,7 @@ function loadSuggestedContacts() {
 function startNewChat(name, phone, avatar) {
     // Close modal
     closeNewChatModal();
-    
+
     // Add new chat if it doesn't exist
     if (!app.chatConversations.has(phone)) {
         app.chatConversations.set(phone, {
@@ -2356,10 +2092,10 @@ function startNewChat(name, phone, avatar) {
             messages: [],
             lastMessageTime: new Date()
         });
-        
+
         app.updateChatsList();
     }
-    
+
     // Open the chat
     app.openChatConversation(phone);
 }
@@ -2369,7 +2105,7 @@ function backToChatList() {
     document.getElementById('chatListView').style.display = 'flex';
     document.getElementById('chatView').classList.add('hidden');
     document.getElementById('chatView').style.display = 'none';
-    
+
     // Show bottom navigation again
     const bottomNav = document.querySelector('.bottom-nav');
     if (bottomNav) {
@@ -2377,7 +2113,7 @@ function backToChatList() {
         bottomNav.style.visibility = 'visible';
         bottomNav.style.opacity = '1';
     }
-    
+
     // Clear current active chat
     app.currentActiveChat = null;
 }
