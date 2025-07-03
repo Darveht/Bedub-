@@ -344,15 +344,21 @@ class EZTranslateApp {
         
         chatList.innerHTML = '';
         
-        // If we have contacts, hide the placeholder
-        if (this.contacts.size > 0) {
-            if (noChat) noChat.style.display = 'none';
-            chatMain.classList.remove('show-placeholder');
+        // Only show placeholder if no contacts AND no active chat
+        if (this.contacts.size === 0 && !this.currentChat) {
+            if (noChat) {
+                noChat.style.display = 'block';
+                noChat.classList.remove('hidden');
+            }
+            chatMain.classList.add('show-placeholder');
         } else {
-            // Show placeholder only if no active chat
+            // Hide placeholder when we have contacts or active chat
+            if (noChat) {
+                noChat.style.display = 'none';
+                noChat.classList.add('hidden');
+            }
             if (!this.currentChat) {
-                if (noChat) noChat.style.display = 'block';
-                chatMain.classList.add('show-placeholder');
+                chatMain.classList.remove('show-placeholder');
             }
         }
         
@@ -399,8 +405,11 @@ class EZTranslateApp {
         chatMain.classList.remove('show-placeholder');
         chatMain.classList.add('active');
         
-        // Hide placeholder and show active chat
-        if (noChat) noChat.style.display = 'none';
+        // Hide placeholder completely and show active chat
+        if (noChat) {
+            noChat.style.display = 'none';
+            noChat.classList.add('hidden');
+        }
         if (activeChat) {
             activeChat.classList.remove('hidden');
             activeChat.style.display = 'flex';
@@ -820,11 +829,14 @@ class EZTranslateApp {
         const noChat = document.querySelector('.no-chat-selected');
         const activeChat = document.getElementById('activeChat');
         
+        // Clear current chat first
+        this.currentChat = null;
+        
         // Show sidebar and hide active chat
         chatSidebar.classList.remove('chat-open');
         chatMain.classList.remove('active');
         
-        // Hide active chat and show appropriate placeholder
+        // Hide active chat
         if (activeChat) {
             activeChat.classList.add('hidden');
             activeChat.style.display = 'none';
@@ -833,13 +845,17 @@ class EZTranslateApp {
         // Show placeholder only if no contacts exist
         if (this.contacts.size === 0) {
             chatMain.classList.add('show-placeholder');
-            if (noChat) noChat.style.display = 'block';
+            if (noChat) {
+                noChat.style.display = 'block';
+                noChat.classList.remove('hidden');
+            }
         } else {
             chatMain.classList.remove('show-placeholder');
-            if (noChat) noChat.style.display = 'none';
+            if (noChat) {
+                noChat.style.display = 'none';
+                noChat.classList.add('hidden');
+            }
         }
-        
-        this.currentChat = null;
     }
 
     showAlert(message) {

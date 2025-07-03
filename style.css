@@ -806,20 +806,21 @@ body {
 
 .messages-container {
     flex: 1;
-    padding: 20px 20px 100px 20px;
+    padding: 20px;
+    padding-bottom: 80px;
     overflow-y: auto;
     background: #f8f9fa;
-    position: relative;
 }
 
 .message-input-area {
     padding: 20px;
     background: white;
     border-top: 1px solid #e5e5e5;
-    position: absolute;
+    position: sticky;
     bottom: 0;
     left: 0;
     right: 0;
+    z-index: 10;
 }
 
 .input-container {
@@ -2033,9 +2034,7 @@ input:checked + .slider:before {
 }
 
 .chat-sidebar.chat-open .new-chat-container {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateX(100px);
+    display: none !important;
 }
 
 .new-chat-btn {
