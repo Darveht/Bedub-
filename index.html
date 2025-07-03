@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeDub - Comunicación Sin Barreras</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Login/Register Page -->
+        <div class="auth-container" id="authContainer">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <div class="logo-symbol">B</div>
+                            <div class="logo-accent"></div>
+                        </div>
+                        <span>BeDub</span>
+                    </div>
+                    <h2 id="authTitle">Bienvenido</h2>
+                    <p id="authSubtitle">Comunícate sin barreras lingüísticas</p>
+                </div>
+
+                <!-- Phone Authentication Form -->
+                <div class="auth-form" id="phoneForm">
+                    <div class="input-group">
+                        <div class="phone-input-container">
+                            <select class="country-code" id="countryCode">
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+52">🇲🇽 +52</option>
+                                <option value="+34">🇪🇸 +34</option>
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+49">🇩🇪 +49</option>
+                                <option value="+39">🇮🇹 +39</option>
+                                <option value="+55">🇧🇷 +55</option>
+                                <option value="+54">🇦🇷 +54</option>
+                            </select>
+                            <input type="tel" id="phoneNumber" placeholder="Número de teléfono" class="phone-input">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="preferredLanguage">Idioma Principal</label>
+                        <select id="preferredLanguage" class="language-select">
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="en">🇺🇸 English</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="de">🇩🇪 Deutsch</option>
+                            <option value="it">🇮🇹 Italiano</option>
+                            <option value="pt">🇧🇷 Português</option>
+                        </select>
+                    </div>
+
+                    <button class="auth-btn" id="sendCodeBtn" onclick="sendVerificationCode()">
+                        <span>Enviar Código</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Verification Code Form -->
+                <div class="auth-form hidden" id="verificationForm">
+                    <div class="verification-info">
+                        <i class="fas fa-mobile-alt"></i>
+                        <p>Código enviado a <span id="phoneDisplay"></span></p>
+                        <button class="change-phone" onclick="changePhone()">Cambiar número</button>
+                    </div>
+
+                    <div class="verification-input">
+                        <input type="text" maxlength="1" class="code-digit" data-index="0">
+                        <input type="text" maxlength="1" class="code-digit" data-index="1">
+                        <input type="text" maxlength="1" class="code-digit" data-index="2">
+                        <input type="text" maxlength="1" class="code-digit" data-index="3">
+                        <input type="text" maxlength="1" class="code-digit" data-index="4">
+                        <input type="text" maxlength="1" class="code-digit" data-index="5">
+                    </div>
+
+                    <button class="auth-btn" id="verifyBtn" onclick="verifyCode()">
+                        <span>Verificar</span>
+                        <i class="fas fa-check"></i>
+                    </button>
+
+                    <div class="resend-section">
+                        <span>¿No recibiste el código?</span>
+                        <button class="resend-btn" onclick="resendCode()">Reenviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial/Onboarding -->
+        <div class="tutorial-container hidden" id="tutorialContainer">
+            <div class="tutorial-slider">
+                <div class="tutorial-slide active" data-slide="0">
+                    <div class="slide-content">
+                        <i class="fas fa-comments"></i>
+                        <h3>Chat en Tiempo Real</h3>
+                        <p>Chatea con personas de todo el mundo sin barreras lingüísticas</p>
+                    </div>
+                </div>
+                <div class="tutorial-slide" data-slide="1">
+                    <div class="slide-content">
+                        <i class="fas fa-language"></i>
+                        <h3>Traducción Automática</h3>
+                        <p>Tus mensajes se traducen automáticamente al idioma del destinatario</p>
+                    </div>
+                </div>
+                <div class="tutorial-slide" data-slide="2">
+                    <div class="slide-content">
+                        <i class="fas fa-phone-alt"></i>
+                        <h3>Llamadas Traducidas</h3>
+                        <p>Realiza llamadas con traducción en tiempo real preservando emociones</p>
+                    </div>
+                </div>
+                <div class="tutorial-slide" data-slide="3">
+                    <div class="slide-content">
+                        <i class="fas fa-microphone"></i>
+                        <h3>Mensajes de Voz</h3>
+                        <p>Envía notas de voz que se traducen automáticamente</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tutorial-controls">
+                <div class="slide-indicators">
+                    <span class="indicator active" data-slide="0"></span>
+                    <span class="indicator" data-slide="1"></span>
+                    <span class="indicator" data-slide="2"></span>
+                    <span class="indicator" data-slide="3"></span>
+                </div>
+                <div class="tutorial-buttons">
+                    <button class="skip-btn" onclick="skipTutorial()">Omitir</button>
+                    <button class="next-btn" onclick="nextSlide()">Siguiente</button>
+                    <button class="start-btn hidden" onclick="startApp()">Comenzar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Application -->
+        <div class="main-app hidden" id="mainApp">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Usuario</span>
+                        <span class="user-status">En línea</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- App Content -->
+            <div class="app-content">
+                <!-- Chat Section -->
+                <div class="section-container active" id="chatsSection">
+                    <div class="chat-layout">
+                        <aside class="chat-sidebar">
+                            <div class="sidebar-header">
+                                <h3>Chats</h3>
+                                <button class="add-contact-btn" onclick="openAddContact()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="search-container">
+                                <input type="text" placeholder="Buscar contactos..." class="search-input">
+                                <i class="fas fa-search search-icon"></i>
+                            </div>
+
+                            <div class="chat-list" id="chatList">
+                                <!-- Chat items will be populated here -->
+                            </div>
+                        </aside>
+
+                        <!-- Chat Area -->
+                        <main class="chat-main">
+                            <div class="no-chat-selected">
+                                <i class="fas fa-comments"></i>
+                                <h3>No tienes chats aún</h3>
+                                <p>Agrega un contacto para comenzar a chatear</p>
+                                <button class="start-chat-btn" onclick="openAddContact()">
+                                    <i class="fas fa-plus"></i>
+                                    Agregar Contacto
+                                </button>
+                            </div>
+
+                            <div class="active-chat hidden" id="activeChat">
+                                <!-- Chat header -->
+                                <div class="chat-header">
+                                    <button class="back-btn" onclick="goBackToChats()">
+                                        <i class="fas fa-arrow-left"></i>
+                                    </button>
+                                    <div class="chat-header-content">
+                                        <div class="contact-info">
+                                            <div class="contact-avatar">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div class="contact-details">
+                                                <span class="contact-name" id="contactName">Contacto</span>
+                                                <span class="contact-language" id="contactLanguage">🇺🇸 English</span>
+                                            </div>
+                                        </div>
+                                        <div class="chat-actions">
+                                            <button class="chat-action-btn" onclick="makeCall()">
+                                                <i class="fas fa-phone"></i>
+                                            </button>
+                                            <button class="chat-action-btn" onclick="makeVideoCall()">
+                                                <i class="fas fa-video"></i>
+                                            </button>
+                                            <button class="chat-action-btn">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Messages area -->
+                                <div class="messages-container" id="messagesContainer">
+                                    <!-- Messages will be populated here -->
+                                </div>
+
+                                <!-- Message input -->
+                                <div class="message-input-area">
+                                    <div class="input-container">
+                                        <button class="voice-record-btn" id="voiceRecordBtn">
+                                            <i class="fas fa-microphone"></i>
+                                        </button>
+                                        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." class="message-input">
+                                        <button class="send-message-btn" id="sendMessageBtn">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+
+                <!-- Translator Section -->
+                <div class="section-container hidden" id="translatorSection">
+                    <div class="translator-layout">
+                        <div class="translator-header">
+                            <h2>Traductor BeDub</h2>
+                            <p>Comunicación instantánea sin barreras</p>
+                        </div>
+                        
+                        <div class="translator-content">
+                            <div class="language-selector">
+                                <div class="language-option" data-label="Desde">
+                                    <select id="fromLanguage" class="language-select">
+                                        <option value="es">🇪🇸 Español</option>
+                                        <option value="en">🇺🇸 English</option>
+                                        <option value="fr">🇫🇷 Français</option>
+                                        <option value="de">🇩🇪 Deutsch</option>
+                                        <option value="it">🇮🇹 Italiano</option>
+                                        <option value="pt">🇧🇷 Português</option>
+                                        <option value="zh">🇨🇳 中文</option>
+                                        <option value="ja">🇯🇵 日本語</option>
+                                        <option value="ko">🇰🇷 한국어</option>
+                                        <option value="ar">🇸🇦 العربية</option>
+                                        <option value="ru">🇷🇺 Русский</option>
+                                        <option value="hi">🇮🇳 हिन्दी</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="swap-languages" onclick="swapLanguages()" title="Intercambiar idiomas">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                
+                                <div class="language-option" data-label="Hacia">
+                                    <select id="toLanguage" class="language-select">
+                                        <option value="en">🇺🇸 English</option>
+                                        <option value="es">🇪🇸 Español</option>
+                                        <option value="fr">🇫🇷 Français</option>
+                                        <option value="de">🇩🇪 Deutsch</option>
+                                        <option value="it">🇮🇹 Italiano</option>
+                                        <option value="pt">🇧🇷 Português</option>
+                                        <option value="zh">🇨🇳 中文</option>
+                                        <option value="ja">🇯🇵 日本語</option>
+                                        <option value="ko">🇰🇷 한국어</option>
+                                        <option value="ar">🇸🇦 العربية</option>
+                                        <option value="ru">🇷🇺 Русский</option>
+                                        <option value="hi">🇮🇳 हिन्दी</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="translate-boxes">
+                                <div class="translate-box">
+                                    <div class="translate-actions">
+                                        <button class="voice-translate-btn" onclick="startVoiceTranslation()" title="Grabar voz">
+                                            <i class="fas fa-microphone"></i>
+                                        </button>
+                                        <button class="paste-btn" onclick="pasteText()" title="Pegar texto">
+                                            <i class="fas fa-paste"></i>
+                                        </button>
+                                        <button class="voice-translate-btn" onclick="clearText()" title="Limpiar texto">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                    <textarea id="sourceText" placeholder="Escribe, pega o habla para traducir instantáneamente..." class="translate-input"></textarea>
+                                </div>
+                                
+                                <div class="translate-box result">
+                                    <div class="translate-actions">
+                                        <button class="speak-btn" onclick="speakTranslation()" title="Reproducir traducción">
+                                            <i class="fas fa-volume-up"></i>
+                                        </button>
+                                        <button class="copy-btn" onclick="copyTranslation()" title="Copiar traducción">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button class="copy-btn" onclick="shareTranslation()" title="Compartir traducción">
+                                            <i class="fas fa-share-alt"></i>
+                                        </button>
+                                    </div>
+                                    <textarea id="translatedText" placeholder="La traducción aparecerá aquí automáticamente..." class="translate-output" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calls Section -->
+                <div class="section-container hidden" id="callsSection">
+                    <div class="calls-layout">
+                        <div class="calls-header">
+                            <h2>Llamadas</h2>
+                            <button class="new-call-btn" onclick="openDialer()">
+                                <i class="fas fa-phone"></i>
+                                Nueva Llamada
+                            </button>
+                        </div>
+                        
+                        <div class="calls-content">
+                            <div class="call-tabs">
+                                <button class="call-tab active" onclick="showCallHistory()">
+                                    <i class="fas fa-history"></i>
+                                    Historial
+                                </button>
+                                <button class="call-tab" onclick="showDialer()">
+                                    <i class="fas fa-phone"></i>
+                                    Marcador
+                                </button>
+                            </div>
+                            
+                            <div class="call-history" id="callHistory">
+                                <div class="empty-calls">
+                                    <i class="fas fa-phone-slash"></i>
+                                    <h3>No hay llamadas</h3>
+                                    <p>Las llamadas aparecerán aquí</p>
+                                </div>
+                            </div>
+                            
+                            <div class="dialer hidden" id="dialer">
+                                <div class="dial-display">
+                                    <input type="text" id="dialNumber" placeholder="Número de teléfono" class="dial-input">
+                                </div>
+                                <div class="dial-pad">
+                                    <button class="dial-btn" onclick="addDigit('1')">1</button>
+                                    <button class="dial-btn" onclick="addDigit('2')">2</button>
+                                    <button class="dial-btn" onclick="addDigit('3')">3</button>
+                                    <button class="dial-btn" onclick="addDigit('4')">4</button>
+                                    <button class="dial-btn" onclick="addDigit('5')">5</button>
+                                    <button class="dial-btn" onclick="addDigit('6')">6</button>
+                                    <button class="dial-btn" onclick="addDigit('7')">7</button>
+                                    <button class="dial-btn" onclick="addDigit('8')">8</button>
+                                    <button class="dial-btn" onclick="addDigit('9')">9</button>
+                                    <button class="dial-btn" onclick="addDigit('*')">*</button>
+                                    <button class="dial-btn" onclick="addDigit('0')">0</button>
+                                    <button class="dial-btn" onclick="addDigit('#')">#</button>
+                                </div>
+                                <div class="dial-actions">
+                                    <button class="delete-btn" onclick="deleteDigit()">
+                                        <i class="fas fa-backspace"></i>
+                                    </button>
+                                    <button class="call-btn" onclick="makePhoneCall()">
+                                        <i class="fas fa-phone"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="section-container hidden" id="settingsSection">
+                    <div class="settings-layout">
+                        <div class="settings-header">
+                            <h2>Ajustes</h2>
+                            <p>Configura tu experiencia en BeDub</p>
+                        </div>
+                        
+                        <div class="settings-content">
+                            <div class="settings-group">
+                                <h3>Cuenta</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Nombre de usuario</span>
+                                        <span class="setting-value" id="settingsUserName">Usuario</span>
+                                    </div>
+                                    <button class="setting-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Número de teléfono</span>
+                                        <span class="setting-value" id="settingsUserPhone">+1234567890</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Idioma principal</span>
+                                        <span class="setting-value" id="settingsUserLanguage">🇪🇸 Español</span>
+                                    </div>
+                                    <button class="setting-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3>Notificaciones</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Sonidos de mensaje</span>
+                                        <span class="setting-description">Reproducir sonido al enviar/recibir mensajes</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="messageSounds" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Notificaciones push</span>
+                                        <span class="setting-description">Recibir notificaciones de nuevos mensajes</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="pushNotifications" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3>Traducción</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Traducción automática</span>
+                                        <span class="setting-description">Traducir mensajes automáticamente</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="autoTranslation" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Mostrar texto original</span>
+                                        <span class="setting-description">Mostrar el texto original junto a la traducción</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="showOriginal" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3>Privacidad</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Estado en línea</span>
+                                        <span class="setting-description">Mostrar cuando estás en línea</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="onlineStatus" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" onclick="app.switchSection('chats')">
+                    <i class="fas fa-comments"></i>
+                    <span>Chats</span>
+                </button>
+                <button class="nav-item" onclick="app.switchSection('translator')">
+                    <i class="fas fa-language"></i>
+                    <span>Traductor</span>
+                </button>
+                <button class="nav-item" onclick="app.switchSection('calls')">
+                    <i class="fas fa-phone"></i>
+                    <span>Llamadas</span>
+                </button>
+                <button class="nav-item" onclick="app.switchSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Ajustes</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Add Contact Modal -->
+        <div class="modal-overlay hidden" id="addContactModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Agregar Contacto</h3>
+                    <button class="modal-close" onclick="closeAddContact()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <div class="add-contact-form">
+                        <div class="phone-search-container">
+                            <div class="search-phone-input">
+                                <span class="plus-icon">+</span>
+                                <input type="tel" id="contactPhone" placeholder="Número de teléfono del contacto">
+                                <button class="search-contact-btn" onclick="searchContact()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="contact-result hidden" id="contactResult">
+                            <!-- Contact search result will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay hidden" id="loadingOverlay">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <span id="loadingText">Cargando...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
