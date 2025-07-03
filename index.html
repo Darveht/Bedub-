@@ -144,95 +144,106 @@
 
             <!-- App Content -->
             <div class="app-content">
-                <!-- Chat Section -->
+                <!-- Chat Section - Nueva implementación -->
                 <div class="section-container active" id="chatsSection">
-                    <div class="chat-layout">
-                        <aside class="chat-sidebar">
-                            <div class="sidebar-header">
-                                <h3>Chats</h3>
-                            </div>
-
-                            <div class="search-container">
-                                <input type="text" placeholder="Buscar contactos..." class="search-input">
-                                <i class="fas fa-search search-icon"></i>
-                            </div>
-
-                            <div class="chat-list" id="chatList">
-                                <!-- Chat items will be populated here -->
-                            </div>
-
-                            <div class="new-chat-container">
-                                <button class="new-chat-btn" onclick="app.openNewChatSection()">
-                                    <div class="new-chat-icon">
-                                        <i class="fas fa-plus"></i>
-                                    </div>
-                                    <span>Chat Nuevo</span>
-                                    <div class="new-chat-animation"></div>
-                                </button>
-                            </div>
-                        </aside>
-
-                        <!-- Chat Area -->
-                        <main class="chat-main">
-                            <div class="no-chat-selected">
-                                <i class="fas fa-comments"></i>
-                                <h3>No tienes chats aún</h3>
-                                <p>Agrega un contacto para comenzar a chatear</p>
-                                <button class="start-chat-btn" onclick="app.openNewChatSection()">
+                    <div class="chat-container">
+                        <!-- Lista de Chats -->
+                        <div class="chat-list-view" id="chatListView">
+                            <div class="chat-header-main">
+                                <h2>Chats</h2>
+                                <button class="new-chat-button" onclick="showNewChatModal()">
                                     <i class="fas fa-plus"></i>
-                                    Nuevo Chat
                                 </button>
                             </div>
+                            
+                            <div class="chat-search">
+                                <div class="search-container">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" placeholder="Buscar conversaciones..." id="chatSearchInput">
+                                </div>
+                            </div>
 
-                            <div class="active-chat hidden" id="activeChat">
-                                <!-- Chat header -->
-                                <div class="chat-header">
-                                    <button class="back-btn" onclick="goBackToChats()">
-                                        <i class="fas fa-arrow-left"></i>
+                            <div class="chats-list" id="chatsList">
+                                <!-- Placeholder cuando no hay chats -->
+                                <div class="empty-chats" id="emptyChats">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-comments"></i>
+                                    </div>
+                                    <h3>No tienes conversaciones</h3>
+                                    <p>Inicia una nueva conversación para comenzar</p>
+                                    <button class="start-first-chat-btn" onclick="showNewChatModal()">
+                                        <i class="fas fa-plus"></i>
+                                        Nueva Conversación
                                     </button>
-                                    <div class="chat-header-content">
-                                        <div class="contact-info">
-                                            <div class="contact-avatar">
-                                                <i class="fas fa-user"></i>
-                                            </div>
-                                            <div class="contact-details">
-                                                <span class="contact-name" id="contactName">Contacto</span>
-                                                <span class="contact-language" id="contactLanguage">🇺🇸 English</span>
-                                            </div>
-                                        </div>
-                                        <div class="chat-actions">
-                                            <button class="chat-action-btn" onclick="makeCall()">
-                                                <i class="fas fa-phone"></i>
-                                            </button>
-                                            <button class="chat-action-btn" onclick="makeVideoCall()">
-                                                <i class="fas fa-video"></i>
-                                            </button>
-                                            <button class="chat-action-btn">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista de Chat Individual -->
+                        <div class="chat-view hidden" id="chatView">
+                            <!-- Header del Chat -->
+                            <div class="chat-view-header">
+                                <button class="back-to-list-btn" onclick="backToChatList()">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <div class="contact-info">
+                                    <div class="contact-avatar" id="currentContactAvatar">A</div>
+                                    <div class="contact-details">
+                                        <h3 id="currentContactName">Ana García</h3>
+                                        <span id="currentContactStatus">En línea</span>
                                     </div>
                                 </div>
-
-                                <!-- Messages area -->
-                                <div class="messages-container" id="messagesContainer">
-                                    <!-- Messages will be populated here -->
+                                <div class="chat-actions">
+                                    <button class="action-btn" onclick="makeCall()">
+                                        <i class="fas fa-phone"></i>
+                                    </button>
+                                    <button class="action-btn" onclick="makeVideoCall()">
+                                        <i class="fas fa-video"></i>
+                                    </button>
                                 </div>
+                            </div>
 
-                                <!-- Message input -->
-                                <div class="message-input-area">
-                                    <div class="input-container">
-                                        <button class="voice-record-btn" id="voiceRecordBtn">
-                                            <i class="fas fa-microphone"></i>
-                                        </button>
-                                        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." class="message-input">
-                                        <button class="send-message-btn" id="sendMessageBtn">
-                                            <i class="fas fa-paper-plane"></i>
-                                        </button>
+                            <!-- Área de Mensajes -->
+                            <div class="messages-area" id="messagesArea">
+                                <!-- Los mensajes se cargarán aquí -->
+                            </div>
+
+                            <!-- Área de Entrada de Mensajes -->
+                            <div class="message-input-container">
+                                <div class="input-wrapper">
+                                    <button class="voice-btn" id="voiceButton" onclick="toggleVoiceRecord()">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                    <input type="text" id="messageTextInput" placeholder="Escribe tu mensaje..." class="message-text-input">
+                                    <button class="send-btn" id="sendButton" onclick="sendNewMessage()">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal para Nuevo Chat -->
+                    <div class="modal-overlay hidden" id="newChatModal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Nueva Conversación</h3>
+                                <button class="close-modal-btn" onclick="closeNewChatModal()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="contact-search">
+                                    <input type="text" placeholder="Buscar contacto o número..." id="newChatSearch">
+                                </div>
+                                <div class="suggested-contacts">
+                                    <h4>Contactos Sugeridos</h4>
+                                    <div class="contacts-grid" id="suggestedContacts">
+                                        <!-- Contactos sugeridos -->
                                     </div>
                                 </div>
                             </div>
-                        </main>
+                        </div>
                     </div>
                 </div>
 

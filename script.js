@@ -31,12 +31,22 @@ class EZTranslateApp {
             phoneInput.addEventListener('input', this.formatPhoneNumber.bind(this));
         }
         
-        // Message input
+        // Message input - old implementation
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
             messageInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     this.sendMessage();
+                }
+            });
+        }
+        
+        // New message input
+        const newMessageInput = document.getElementById('messageTextInput');
+        if (newMessageInput) {
+            newMessageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendNewMessage();
                 }
             });
         }
@@ -268,15 +278,43 @@ class EZTranslateApp {
         this.renderChatList();
     }
     
-    // ============ CHAT FUNCTIONS ============
+    // ============ NUEVA IMPLEMENTACIÓN DE CHAT ============
     loadMockData() {
-        // No mock data - start with empty state
-        this.contacts = new Map();
-        this.messages = new Map();
+        // Initialize with empty state
+        this.chatConversations = new Map();
+        this.currentActiveChat = null;
+        this.isRecordingVoice = false;
         
         // Initialize sound settings
         this.soundEnabled = true;
         this.createSoundEffects();
+        
+        // Load some example contacts for demo
+        this.loadExampleContacts();
+    }
+    
+    loadExampleContacts() {
+        // Add some example contacts after a delay to simulate loading
+        setTimeout(() => {
+            this.addExampleContact('Ana García', '+52 555 123 4567', 'A', 'es');
+            this.addExampleContact('John Smith', '+1 555 987 6543', 'J', 'en');
+            this.addExampleContact('Marie Dubois', '+33 1 45 67 89 01', 'M', 'fr');
+            this.updateChatsList();
+        }, 2000);
+    }
+    
+    addExampleContact(name, phone, avatar, language) {
+        const chatId = phone;
+        this.chatConversations.set(chatId, {
+            id: chatId,
+            name: name,
+            phone: phone,
+            avatar: avatar,
+            language: language,
+            status: 'En línea',
+            messages: [],
+            lastMessageTime: new Date()
+        });
     }
     
     createSoundEffects() {
@@ -336,242 +374,247 @@ class EZTranslateApp {
         };
     }
     
-    renderChatList() {
-        const chatList = document.getElementById('chatList');
-        const noChat = document.querySelector('.no-chat-selected');
-        const chatMain = document.querySelector('.chat-main');
+    updateChatsList() {
+        const chatsList = document.getElementById('chatsList');
+        const emptyChats = document.getElementById('emptyChats');
         
-        chatList.innerHTML = '';
-        
-        // Only show placeholder if no contacts AND no active chat
-        if (this.contacts.size === 0 && !this.currentChat) {
-            if (noChat) {
-                noChat.style.display = 'block';
-                noChat.classList.remove('hidden');
-            }
-            chatMain.classList.add('show-placeholder');
-        } else {
-            // Hide placeholder when we have contacts or active chat
-            if (noChat) {
-                noChat.style.display = 'none';
-                noChat.classList.add('hidden');
-            }
-            if (!this.currentChat) {
-                chatMain.classList.remove('show-placeholder');
-            }
+        if (this.chatConversations.size === 0) {
+            emptyChats.style.display = 'flex';
+            return;
         }
         
-        this.contacts.forEach((contact, phone) => {
-            const messages = this.messages.get(phone) || [];
-            const lastMessage = messages[messages.length - 1];
+        emptyChats.style.display = 'none';
+        
+        // Clear current list
+        chatsList.innerHTML = '';
+        
+        // Add chat items
+        this.chatConversations.forEach((chat, chatId) => {
+            const lastMessage = chat.messages[chat.messages.length - 1];
             
             const chatItem = document.createElement('div');
-            chatItem.className = `chat-item ${this.currentChat === phone ? 'active' : ''}`;
-            chatItem.onclick = () => this.openChat(phone);
-            
-            chatItem.innerHTML = `
-                <div class="chat-item-avatar">${contact.avatar}</div>
-                <div class="chat-item-info">
-                    <div class="chat-item-name">${contact.name}</div>
-                    <div class="chat-item-preview">
-                        ${lastMessage ? (lastMessage.sent ? 'Tú: ' : '') + (lastMessage.translation || lastMessage.text) : 'Sin mensajes'}
-                    </div>
-                </div>
-                <div class="chat-item-meta">
-                    <div class="chat-item-time">
-                        ${lastMessage ? this.formatTime(lastMessage.timestamp) : ''}
-                    </div>
-                    ${contact.status === 'online' ? '<div class="chat-item-badge">•</div>' : ''}
-                </div>
+            chatItem.className = 'chat-list-item';
+            chatItem.style.cssText = `
+                display: flex;
+                align-items: center;
+                padding: 16px 24px;
+                border-bottom: 1px solid #f0f0f0;
+                cursor: pointer;
+                transition: background 0.3s ease;
             `;
             
-            chatList.appendChild(chatItem);
+            chatItem.innerHTML = `
+                <div style="
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    background: #00d4aa;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #000;
+                    font-size: 20px;
+                    font-weight: 600;
+                    margin-right: 16px;
+                ">${chat.avatar}</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #000;
+                        margin-bottom: 4px;
+                    ">${chat.name}</div>
+                    <div style="
+                        font-size: 14px;
+                        color: #666;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    ">${lastMessage ? (lastMessage.isSent ? 'Tú: ' : '') + lastMessage.text : 'Toca para iniciar conversación'}</div>
+                </div>
+                <div style="
+                    font-size: 12px;
+                    color: #999;
+                    text-align: right;
+                ">${lastMessage ? this.formatTime(lastMessage.timestamp) : ''}</div>
+            `;
+            
+            chatItem.addEventListener('mouseenter', () => {
+                chatItem.style.background = '#f8f9fa';
+            });
+            
+            chatItem.addEventListener('mouseleave', () => {
+                chatItem.style.background = 'transparent';
+            });
+            
+            chatItem.addEventListener('click', () => {
+                this.openChatConversation(chatId);
+            });
+            
+            chatsList.appendChild(chatItem);
         });
     }
     
-    openChat(phone) {
-        this.currentChat = phone;
-        const contact = this.contacts.get(phone);
+    openChatConversation(chatId) {
+        const chat = this.chatConversations.get(chatId);
+        if (!chat) return;
         
-        // Update UI for fullscreen chat
-        const chatMain = document.querySelector('.chat-main');
-        const chatSidebar = document.querySelector('.chat-sidebar');
-        const noChat = document.querySelector('.no-chat-selected');
-        const activeChat = document.getElementById('activeChat');
+        this.currentActiveChat = chatId;
+        
+        // Hide chat list and show chat view
+        document.getElementById('chatListView').style.display = 'none';
+        document.getElementById('chatView').classList.remove('hidden');
+        document.getElementById('chatView').style.display = 'flex';
+        
+        // Hide bottom navigation
         const bottomNav = document.querySelector('.bottom-nav');
-        const messageInputArea = document.querySelector('.message-input-area');
-        
-        // Hide sidebar and show chat
-        chatSidebar.classList.add('chat-open');
-        chatMain.classList.remove('show-placeholder');
-        chatMain.classList.add('active');
-        
-        // Hide bottom navigation when chat is active
         if (bottomNav) {
             bottomNav.style.transform = 'translateY(100%)';
             bottomNav.style.visibility = 'hidden';
             bottomNav.style.opacity = '0';
         }
         
-        // Ensure message input is always visible
-        if (messageInputArea) {
-            messageInputArea.style.display = 'block';
-            messageInputArea.style.visibility = 'visible';
-            messageInputArea.style.opacity = '1';
-            messageInputArea.style.bottom = '0';
-            messageInputArea.style.zIndex = '100';
-        }
-        
-        // Hide placeholder completely and show active chat
-        if (noChat) {
-            noChat.style.display = 'none';
-            noChat.classList.add('hidden');
-        }
-        if (activeChat) {
-            activeChat.classList.remove('hidden');
-            activeChat.style.display = 'flex';
-        }
-        
         // Update chat header
-        document.getElementById('contactName').textContent = contact.name;
-        document.getElementById('contactLanguage').textContent = this.getLanguageDisplay(contact.language);
+        document.getElementById('currentContactAvatar').textContent = chat.avatar;
+        document.getElementById('currentContactName').textContent = chat.name;
+        document.getElementById('currentContactStatus').textContent = chat.status;
         
-        // Update active chat item styling
-        document.querySelectorAll('.chat-item').forEach(item => {
-            item.classList.remove('active');
-        });
+        // Render messages
+        this.renderChatMessages(chatId);
         
-        this.renderMessages();
+        // Focus message input
+        document.getElementById('messageTextInput').focus();
     }
     
-    renderMessages() {
-        const messagesContainer = document.getElementById('messagesContainer');
-        messagesContainer.innerHTML = '';
+    renderChatMessages(chatId) {
+        const chat = this.chatConversations.get(chatId);
+        if (!chat) return;
         
-        const messages = this.messages.get(this.currentChat) || [];
+        const messagesArea = document.getElementById('messagesArea');
+        messagesArea.innerHTML = '';
         
-        messages.forEach((message, index) => {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${message.sent ? 'sent' : 'received'}`;
+        if (chat.messages.length === 0) {
+            messagesArea.innerHTML = `
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    text-align: center;
+                    color: #666;
+                    flex-direction: column;
+                    gap: 16px;
+                ">
+                    <i class="fas fa-comments" style="font-size: 48px; color: #ddd;"></i>
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; color: #333;">Inicia una conversación</h3>
+                        <p style="margin: 0; color: #666;">Envía un mensaje para comenzar a chatear con ${chat.name}</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        chat.messages.forEach((message, index) => {
+            const messageElement = document.createElement('div');
+            messageElement.style.cssText = `
+                display: flex;
+                justify-content: ${message.isSent ? 'flex-end' : 'flex-start'};
+                margin-bottom: 16px;
+                animation: slideInMessage 0.3s ease;
+            `;
             
-            // Agregar animación de entrada con delay
-            messageDiv.style.opacity = '0';
-            messageDiv.style.transform = 'translateY(20px)';
-            
-            messageDiv.innerHTML = `
-                <div class="message-bubble">
-                    <div class="message-text">${message.sent ? message.text : message.translation}</div>
-                    ${message.translation && !message.sent ? 
-                        `<div class="message-translation">Original: "${message.text}"</div>` : ''}
-                    <div class="message-time">${this.formatTime(message.timestamp)}</div>
+            messageElement.innerHTML = `
+                <div style="
+                    max-width: 70%;
+                    padding: 12px 16px;
+                    border-radius: 18px;
+                    background: ${message.isSent ? '#000' : '#fff'};
+                    color: ${message.isSent ? '#fff' : '#000'};
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    position: relative;
+                    ${message.isSent ? 'border-bottom-right-radius: 4px;' : 'border-bottom-left-radius: 4px;'}
+                ">
+                    <div style="
+                        font-size: 15px;
+                        line-height: 1.4;
+                        margin-bottom: 4px;
+                    ">${message.text}</div>
+                    ${message.translation && !message.isSent ? 
+                        `<div style="
+                            font-size: 13px;
+                            opacity: 0.7;
+                            font-style: italic;
+                            margin-top: 4px;
+                        ">Original: "${message.originalText}"</div>` : ''}
+                    <div style="
+                        font-size: 11px;
+                        opacity: 0.6;
+                        text-align: right;
+                        margin-top: 4px;
+                    ">${this.formatTime(message.timestamp)}</div>
                 </div>
             `;
             
-            messagesContainer.appendChild(messageDiv);
-            
-            // Animar entrada del mensaje
-            setTimeout(() => {
-                messageDiv.style.transition = 'all 0.3s ease';
-                messageDiv.style.opacity = '1';
-                messageDiv.style.transform = 'translateY(0)';
-            }, index * 50);
+            messagesArea.appendChild(messageElement);
         });
         
-        // Scroll suave al final
+        // Scroll to bottom
         setTimeout(() => {
-            messagesContainer.scrollTo({
-                top: messagesContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, messages.length * 50 + 100);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }, 100);
     }
     
-    async sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const text = messageInput.value.trim();
+    async sendNewMessage() {
+        const input = document.getElementById('messageTextInput');
+        const text = input.value.trim();
         
-        if (!text || !this.currentChat) return;
+        if (!text || !this.currentActiveChat) return;
         
-        // Limpiar input inmediatamente para mejor UX
-        messageInput.value = '';
+        const chat = this.chatConversations.get(this.currentActiveChat);
+        if (!chat) return;
         
-        // Mostrar indicador de "enviando"
-        this.showTypingIndicator(true);
+        // Clear input immediately
+        input.value = '';
         
         // Play send sound
         if (this.sendSound) this.sendSound();
         
-        const contact = this.contacts.get(this.currentChat);
-        
         try {
+            // Create message
             const message = {
+                id: Date.now().toString(),
                 text: text,
-                translation: await this.translateText(text, this.currentUser.language, contact.language),
-                sent: true,
+                originalText: text,
+                translation: await this.translateText(text, this.currentUser?.language || 'es', chat.language),
+                isSent: true,
                 timestamp: new Date()
             };
             
-            // Add to messages
-            if (!this.messages.has(this.currentChat)) {
-                this.messages.set(this.currentChat, []);
-            }
-            this.messages.get(this.currentChat).push(message);
+            // Add message to chat
+            chat.messages.push(message);
+            chat.lastMessageTime = new Date();
             
-            // Ocultar indicador de escritura
-            this.showTypingIndicator(false);
+            // Update UI
+            this.renderChatMessages(this.currentActiveChat);
+            this.updateChatsList();
             
-            this.renderMessages();
-            this.renderChatList();
-            
-            // Simulate response with typing indicator
+            // Simulate response after delay
             setTimeout(() => {
-                this.showTypingIndicator(true, false); // Mostrar que el otro está escribiendo
-                setTimeout(() => this.simulateResponse(), 1500);
-            }, 1000);
+                this.simulateMessageResponse();
+            }, 1000 + Math.random() * 2000);
             
         } catch (error) {
-            this.showTypingIndicator(false);
+            console.error('Error sending message:', error);
             this.showAlert('Error al enviar mensaje. Intenta de nuevo.');
         }
     }
     
-    showTypingIndicator(show, isSending = true) {
-        const messagesContainer = document.getElementById('messagesContainer');
-        let typingIndicator = document.getElementById('typingIndicator');
+    async simulateMessageResponse() {
+        if (!this.currentActiveChat) return;
         
-        if (show) {
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-            
-            typingIndicator = document.createElement('div');
-            typingIndicator.id = 'typingIndicator';
-            typingIndicator.className = `message ${isSending ? 'sent' : 'received'}`;
-            typingIndicator.innerHTML = `
-                <div class="message-bubble typing-bubble">
-                    <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                    <div class="typing-text">${isSending ? 'Enviando...' : 'Escribiendo...'}</div>
-                </div>
-            `;
-            
-            messagesContainer.appendChild(typingIndicator);
-            messagesContainer.scrollTo({
-                top: messagesContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        } else {
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
-    }
-    
-    async simulateResponse() {
-        if (!this.currentChat) return;
+        const chat = this.chatConversations.get(this.currentActiveChat);
+        if (!chat) return;
         
         const responses = [
             'That sounds great!',
@@ -586,29 +629,30 @@ class EZTranslateApp {
             'Absolutely right!'
         ];
         
-        const contact = this.contacts.get(this.currentChat);
         const responseText = responses[Math.floor(Math.random() * responses.length)];
         
         try {
             const response = {
-                text: responseText,
-                translation: await this.translateText(responseText, contact.language, this.currentUser.language),
-                sent: false,
+                id: Date.now().toString(),
+                text: await this.translateText(responseText, chat.language, this.currentUser?.language || 'es'),
+                originalText: responseText,
+                translation: true,
+                isSent: false,
                 timestamp: new Date()
             };
-            
-            // Ocultar indicador de escritura
-            this.showTypingIndicator(false);
             
             // Play receive sound
             if (this.receiveSound) this.receiveSound();
             
-            this.messages.get(this.currentChat).push(response);
-            this.renderMessages();
-            this.renderChatList();
+            // Add response to chat
+            chat.messages.push(response);
+            chat.lastMessageTime = new Date();
+            
+            // Update UI
+            this.renderChatMessages(this.currentActiveChat);
+            this.updateChatsList();
             
         } catch (error) {
-            this.showTypingIndicator(false);
             console.error('Error simulating response:', error);
         }
     }
@@ -1695,6 +1739,122 @@ function logout() {
 
 function goBackToChats() {
     app.goBackToChats();
+}
+
+// Nuevas funciones para el chat rediseñado
+function showNewChatModal() {
+    const modal = document.getElementById('newChatModal');
+    modal.classList.remove('hidden');
+    
+    // Load suggested contacts
+    loadSuggestedContacts();
+}
+
+function closeNewChatModal() {
+    const modal = document.getElementById('newChatModal');
+    modal.classList.add('hidden');
+}
+
+function loadSuggestedContacts() {
+    const contactsGrid = document.getElementById('suggestedContacts');
+    const mockContacts = [
+        { name: 'Carlos Rodríguez', phone: '+34 612 345 678', avatar: 'C' },
+        { name: 'María López', phone: '+1 555 987 6543', avatar: 'M' },
+        { name: 'David Wilson', phone: '+1 555 246 8135', avatar: 'D' },
+        { name: 'Sofia Herrera', phone: '+52 55 1357 9246', avatar: 'S' }
+    ];
+    
+    contactsGrid.innerHTML = mockContacts.map(contact => `
+        <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        " onclick="startNewChat('${contact.name}', '${contact.phone}', '${contact.avatar}')">
+            <div style="
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: #00d4aa;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #000;
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 8px;
+            ">${contact.avatar}</div>
+            <div style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #000;
+                margin-bottom: 4px;
+            ">${contact.name}</div>
+            <div style="
+                font-size: 12px;
+                color: #666;
+            ">${contact.phone}</div>
+        </div>
+    `).join('');
+}
+
+function startNewChat(name, phone, avatar) {
+    // Close modal
+    closeNewChatModal();
+    
+    // Add new chat if it doesn't exist
+    if (!app.chatConversations.has(phone)) {
+        app.chatConversations.set(phone, {
+            id: phone,
+            name: name,
+            phone: phone,
+            avatar: avatar,
+            language: 'es', // Default language
+            status: 'En línea',
+            messages: [],
+            lastMessageTime: new Date()
+        });
+        
+        app.updateChatsList();
+    }
+    
+    // Open the chat
+    app.openChatConversation(phone);
+}
+
+function backToChatList() {
+    // Show chat list and hide chat view
+    document.getElementById('chatListView').style.display = 'flex';
+    document.getElementById('chatView').classList.add('hidden');
+    document.getElementById('chatView').style.display = 'none';
+    
+    // Show bottom navigation again
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (bottomNav) {
+        bottomNav.style.transform = 'translateY(0)';
+        bottomNav.style.visibility = 'visible';
+        bottomNav.style.opacity = '1';
+    }
+    
+    // Clear current active chat
+    app.currentActiveChat = null;
+}
+
+function sendNewMessage() {
+    app.sendNewMessage();
+}
+
+function toggleVoiceRecord() {
+    if (app.isRecordingVoice) {
+        app.stopVoiceRecording();
+    } else {
+        app.startVoiceRecording();
+    }
 }
 
 function switchSection(section) {
