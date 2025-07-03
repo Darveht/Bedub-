@@ -201,54 +201,76 @@ class EZTranslateApp {
 
     // ============ AUTH FUNCTIONS (SIN FIREBASE) ============
     async sendVerificationCode() {
+        console.log('sendVerificationCode called');
+        
         const phoneInput = document.getElementById('phoneNumber');
-        const countryCode = document.getElementById('countryCode').value;
-        const language = document.getElementById('preferredLanguage').value;
+        const countryCode = document.getElementById('countryCode');
+        const language = document.getElementById('preferredLanguage');
 
-        if (!phoneInput) {
-            console.error('Phone input element not found');
-            this.showAlert('Error: No se encontró el campo de teléfono');
+        if (!phoneInput || !countryCode || !language) {
+            console.error('Required elements not found');
+            this.showAlert('Error: Elementos del formulario no encontrados');
             return;
         }
 
-        const phoneNumber = phoneInput.value;
-        console.log('Valor del input:', phoneNumber);
+        const phoneNumber = phoneInput.value.trim();
+        console.log('Phone number:', phoneNumber);
 
-        if (!phoneNumber || phoneNumber.trim() === '') {
+        if (!phoneNumber) {
             this.showAlert('Por favor ingresa tu número de teléfono');
             return;
         }
 
         // Limpiar y validar número
         const cleanPhone = phoneNumber.replace(/\D/g, '');
-        console.log('Número limpio:', cleanPhone);
+        console.log('Clean phone:', cleanPhone);
 
-        if (cleanPhone.length < 10) {
-            this.showAlert('Número de teléfono demasiado corto (mínimo 10 dígitos)');
+        if (cleanPhone.length < 7) {
+            this.showAlert('Número de teléfono muy corto');
             return;
         }
 
-        const fullPhone = countryCode + cleanPhone;
-        console.log('Número completo a enviar:', fullPhone);
+        const fullPhone = countryCode.value + cleanPhone;
+        console.log('Full phone:', fullPhone);
 
-        this.showLoading('Enviando código SMS...');
+        // Disable button to prevent multiple clicks
+        const sendBtn = document.getElementById('sendCodeBtn');
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span>Enviando...</span>';
+        }
 
         try {
-            // Simular envío de SMS
-            await this.delay(2000);
+            this.showLoading('Enviando código SMS...');
+            
+            // Simular envío de SMS con timeout más corto
+            await this.delay(1500);
 
-            document.getElementById('phoneDisplay').textContent = fullPhone;
-            localStorage.setItem('userLanguage', language);
+            // Store data
+            localStorage.setItem('userLanguage', language.value);
             localStorage.setItem('userPhone', fullPhone);
+            
+            // Update UI
+            const phoneDisplay = document.getElementById('phoneDisplay');
+            if (phoneDisplay) {
+                phoneDisplay.textContent = fullPhone;
+            }
+
             this.hideLoading();
             this.switchToVerification();
             this.showAlert(`¡Código enviado! Usa: ${this.mockVerificationCode}`);
-            console.log('Código de prueba:', this.mockVerificationCode);
+            console.log('Verification process completed');
 
         } catch (error) {
+            console.error('Error in sendVerificationCode:', error);
             this.hideLoading();
-            console.error('Error completo:', error);
-            this.showAlert('Error al enviar código SMS');
+            this.showAlert('Error al enviar código. Intenta de nuevo.');
+        } finally {
+            // Re-enable button
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<span>Enviar Código</span><i class="fas fa-arrow-right"></i>';
+            }
         }
     }
 
@@ -1170,55 +1192,60 @@ class EZTranslateApp {
     }
 
     showLoading(text = 'Cargando...') {
-        let loadingOverlay = document.getElementById('loadingOverlay');
-        if (!loadingOverlay) {
-            // Create loading overlay if it doesn't exist
-            loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'loadingOverlay';
-            loadingOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-                color: white;
-                font-size: 18px;
-                font-weight: 600;
-            `;
-            loadingOverlay.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid #00d4aa; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-                    <div id="loadingText">${text}</div>
-                </div>
-            `;
-
-            // Add spinner animation
-            if (!document.querySelector('#spinnerStyles')) {
-                const style = document.createElement('style');
-                style.id = 'spinnerStyles';
-                style.textContent = `
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
+        console.log('Showing loading:', text);
+        
+        // Use requestAnimationFrame to prevent UI blocking
+        requestAnimationFrame(() => {
+            let loadingOverlay = document.getElementById('loadingOverlay');
+            if (!loadingOverlay) {
+                // Create loading overlay if it doesn't exist
+                loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'loadingOverlay';
+                loadingOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                    color: white;
+                    font-size: 18px;
+                    font-weight: 600;
                 `;
-                document.head.appendChild(style);
-            }
+                loadingOverlay.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid #00d4aa; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                        <div id="loadingText">${text}</div>
+                    </div>
+                `;
 
-            document.body.appendChild(loadingOverlay);
-        } else {
-            const loadingText = document.getElementById('loadingText');
-            if (loadingText) {
-                loadingText.textContent = text;
+                // Add spinner animation
+                if (!document.querySelector('#spinnerStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'spinnerStyles';
+                    style.textContent = `
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                document.body.appendChild(loadingOverlay);
+            } else {
+                const loadingText = document.getElementById('loadingText');
+                if (loadingText) {
+                    loadingText.textContent = text;
+                }
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.style.display = 'flex';
             }
-            loadingOverlay.classList.remove('hidden');
-            loadingOverlay.style.display = 'flex';
-        }
+        });
     }
 
     hideLoading() {
@@ -1317,7 +1344,13 @@ class EZTranslateApp {
     }
 
     delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve, reject) => {
+            if (ms < 0 || ms > 10000) {
+                reject(new Error('Invalid delay time'));
+                return;
+            }
+            setTimeout(resolve, ms);
+        });
     }
 
     // ============ NAVIGATION FUNCTIONS ============
@@ -2060,7 +2093,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global functions for HTML onclick events
 function sendVerificationCode() {
-    app.sendVerificationCode();
+    try {
+        console.log('Global sendVerificationCode called');
+        if (app && typeof app.sendVerificationCode === 'function') {
+            app.sendVerificationCode();
+        } else {
+            console.error('App not initialized or sendVerificationCode not available');
+            alert('Error: La aplicación no está lista. Recarga la página.');
+        }
+    } catch (error) {
+        console.error('Error in global sendVerificationCode:', error);
+        alert('Error al enviar código. Recarga la página e intenta de nuevo.');
+    }
 }
 
 function verifyCode() {
