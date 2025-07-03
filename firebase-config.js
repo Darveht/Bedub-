@@ -7,6 +7,7 @@ import {
     RecaptchaVerifier,
     onAuthStateChanged 
 } from 'firebase/auth';
+import { getAnalytics } from 'firebase/analytics';
 import { 
     getFirestore, 
     doc, 
@@ -20,20 +21,24 @@ import {
     where
 } from 'firebase/firestore';
 
-// Tu configuración de Firebase (reemplaza con tus credenciales)
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "tu-api-key",
-    authDomain: "tu-project.firebaseapp.com",
-    projectId: "tu-project-id",
-    storageBucket: "tu-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "tu-app-id"
+    apiKey: "AIzaSyCFQ_geG0HIv2EZ-bfKc97TJNtf2sdqPzc",
+    authDomain: "clack-koder.firebaseapp.com",
+    databaseURL: "https://clack-koder-default-rtdb.firebaseio.com",
+    projectId: "clack-koder",
+    storageBucket: "clack-koder.firebasestorage.app",
+    messagingSenderId: "478151254938",
+    appId: "1:478151254938:web:e2c00e3a5426bd192b9023",
+    measurementId: "G-P29ME5Z3S1"
 };
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const analytics = getAnalytics(app);
 
 // Configurar reCAPTCHA para verificación SMS
 export function setupRecaptcha() {
