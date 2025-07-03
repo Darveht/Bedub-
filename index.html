@@ -245,85 +245,137 @@
                     </div>
                 </div>
 
-                <!-- Translator Section -->
+                <!-- Voice Translator Section -->
                 <div class="section-container hidden" id="translatorSection">
-                    <div class="translator-layout">
-                        <div class="translator-header">
-                            <h2>Traductor BeDub</h2>
-                            <p>Comunicación instantánea sin barreras</p>
+                    <div class="voice-translator-layout">
+                        <div class="voice-translator-header">
+                            <div class="translator-logo">
+                                <div class="logo-pulse">
+                                    <i class="fas fa-microphone-alt"></i>
+                                </div>
+                            </div>
+                            <h2>Traductor de Voz</h2>
+                            <p>Habla naturalmente y escucha la traducción instantánea</p>
                         </div>
-                        
-                        <div class="translator-content">
-                            <div class="language-selector">
-                                <div class="language-option" data-label="Desde">
-                                    <select id="fromLanguage" class="language-select">
-                                        <option value="es">🇪🇸 Español</option>
-                                        <option value="en">🇺🇸 English</option>
-                                        <option value="fr">🇫🇷 Français</option>
-                                        <option value="de">🇩🇪 Deutsch</option>
-                                        <option value="it">🇮🇹 Italiano</option>
-                                        <option value="pt">🇧🇷 Português</option>
-                                        <option value="zh">🇨🇳 中文</option>
-                                        <option value="ja">🇯🇵 日本語</option>
-                                        <option value="ko">🇰🇷 한국어</option>
-                                        <option value="ar">🇸🇦 العربية</option>
-                                        <option value="ru">🇷🇺 Русский</option>
-                                        <option value="hi">🇮🇳 हिन्दी</option>
+
+                        <div class="voice-translator-content">
+                            <!-- Language Selection -->
+                            <div class="voice-language-selector">
+                                <div class="language-card from-language">
+                                    <div class="language-label">Hablas en</div>
+                                    <select id="voiceFromLanguage" class="voice-language-select">
+                                        <option value="es-ES">🇪🇸 Español</option>
+                                        <option value="en-US">🇺🇸 English</option>
+                                        <option value="fr-FR">🇫🇷 Français</option>
+                                        <option value="de-DE">🇩🇪 Deutsch</option>
+                                        <option value="it-IT">🇮🇹 Italiano</option>
+                                        <option value="pt-BR">🇧🇷 Português</option>
+                                        <option value="zh-CN">🇨🇳 中文</option>
+                                        <option value="ja-JP">🇯🇵 日本語</option>
+                                        <option value="ko-KR">🇰🇷 한국어</option>
+                                        <option value="ar-SA">🇸🇦 العربية</option>
+                                        <option value="ru-RU">🇷🇺 Русский</option>
+                                        <option value="hi-IN">🇮🇳 हिन्दी</option>
                                     </select>
                                 </div>
-                                
-                                <button class="swap-languages" onclick="swapLanguages()" title="Intercambiar idiomas">
-                                    <i class="fas fa-exchange-alt"></i>
+
+                                <button class="voice-swap-btn" onclick="swapVoiceLanguages()" title="Intercambiar idiomas">
+                                    <div class="swap-icon">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
                                 </button>
-                                
-                                <div class="language-option" data-label="Hacia">
-                                    <select id="toLanguage" class="language-select">
-                                        <option value="en">🇺🇸 English</option>
-                                        <option value="es">🇪🇸 Español</option>
-                                        <option value="fr">🇫🇷 Français</option>
-                                        <option value="de">🇩🇪 Deutsch</option>
-                                        <option value="it">🇮🇹 Italiano</option>
-                                        <option value="pt">🇧🇷 Português</option>
-                                        <option value="zh">🇨🇳 中文</option>
-                                        <option value="ja">🇯🇵 日本語</option>
-                                        <option value="ko">🇰🇷 한국어</option>
-                                        <option value="ar">🇸🇦 العربية</option>
-                                        <option value="ru">🇷🇺 Русский</option>
-                                        <option value="hi">🇮🇳 हिन्दी</option>
+
+                                <div class="language-card to-language">
+                                    <div class="language-label">Escuchas en</div>
+                                    <select id="voiceToLanguage" class="voice-language-select">
+                                        <option value="en-US">🇺🇸 English</option>
+                                        <option value="es-ES">🇪🇸 Español</option>
+                                        <option value="fr-FR">🇫🇷 Français</option>
+                                        <option value="de-DE">🇩🇪 Deutsch</option>
+                                        <option value="it-IT">🇮🇹 Italiano</option>
+                                        <option value="pt-BR">🇧🇷 Português</option>
+                                        <option value="zh-CN">🇨🇳 中文</option>
+                                        <option value="ja-JP">🇯🇵 日本語</option>
+                                        <option value="ko-KR">🇰🇷 한국어</option>
+                                        <option value="ar-SA">🇸🇦 العربية</option>
+                                        <option value="ru-RU">🇷🇺 Русский</option>
+                                        <option value="hi-IN">🇮🇳 हिन्दी</option>
                                     </select>
                                 </div>
                             </div>
-                            
-                            <div class="translate-boxes">
-                                <div class="translate-box">
-                                    <div class="translate-actions">
-                                        <button class="voice-translate-btn" onclick="startVoiceTranslation()" title="Grabar voz">
+
+                            <!-- Voice Recording Area -->
+                            <div class="voice-recording-area">
+                                <div class="recording-container">
+                                    <div class="recording-visual" id="recordingVisual">
+                                        <div class="audio-waves">
+                                            <div class="wave"></div>
+                                            <div class="wave"></div>
+                                            <div class="wave"></div>
+                                            <div class="wave"></div>
+                                            <div class="wave"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="voice-record-main-btn" id="mainRecordBtn" onclick="toggleVoiceRecording()">
+                                        <div class="mic-icon">
                                             <i class="fas fa-microphone"></i>
-                                        </button>
-                                        <button class="paste-btn" onclick="pasteText()" title="Pegar texto">
-                                            <i class="fas fa-paste"></i>
-                                        </button>
-                                        <button class="voice-translate-btn" onclick="clearText()" title="Limpiar texto">
-                                            <i class="fas fa-trash-alt"></i>
+                                        </div>
+                                        <span class="record-text">Toca para hablar</span>
+                                    </button>
+
+                                    <div class="recording-status" id="recordingStatus">
+                                        <div class="status-text">Listo para grabar</div>
+                                        <div class="status-indicator"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Translation Display -->
+                            <div class="translation-display" id="translationDisplay">
+                                <div class="translation-card original-text">
+                                    <div class="card-header">
+                                        <span class="text-label">Lo que dijiste</span>
+                                        <button class="play-original-btn" onclick="playOriginalText()" title="Reproducir original">
+                                            <i class="fas fa-play"></i>
                                         </button>
                                     </div>
-                                    <textarea id="sourceText" placeholder="Escribe, pega o habla para traducir instantáneamente..." class="translate-input"></textarea>
+                                    <div class="text-content" id="originalTextContent">
+                                        Presiona el micrófono y comienza a hablar...
+                                    </div>
                                 </div>
-                                
-                                <div class="translate-box result">
-                                    <div class="translate-actions">
-                                        <button class="speak-btn" onclick="speakTranslation()" title="Reproducir traducción">
+
+                                <div class="translation-arrow">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+
+                                <div class="translation-card translated-text">
+                                    <div class="card-header">
+                                        <span class="text-label">Traducción</span>
+                                        <button class="play-translation-btn" onclick="playTranslatedText()" title="Reproducir traducción">
                                             <i class="fas fa-volume-up"></i>
                                         </button>
-                                        <button class="copy-btn" onclick="copyTranslation()" title="Copiar traducción">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                        <button class="copy-btn" onclick="shareTranslation()" title="Compartir traducción">
-                                            <i class="fas fa-share-alt"></i>
-                                        </button>
                                     </div>
-                                    <textarea id="translatedText" placeholder="La traducción aparecerá aquí automáticamente..." class="translate-output" readonly></textarea>
+                                    <div class="text-content" id="translatedTextContent">
+                                        La traducción aparecerá aquí automáticamente...
+                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="translation-actions">
+                                <button class="action-btn copy-btn" onclick="copyVoiceTranslation()" title="Copiar traducción">
+                                    <i class="fas fa-copy"></i>
+                                    <span>Copiar</span>
+                                </button>
+                                <button class="action-btn share-btn" onclick="shareVoiceTranslation()" title="Compartir traducción">
+                                    <i class="fas fa-share-alt"></i>
+                                    <span>Compartir</span>
+                                </button>
+                                <button class="action-btn clear-btn" onclick="clearVoiceTranslation()" title="Limpiar todo">
+                                    <i class="fas fa-trash-alt"></i>
+                                    <span>Limpiar</span>
+                                </button>
                             </div>
                         </div>
                     </div>

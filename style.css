@@ -1050,9 +1050,9 @@ body {
     transform: translateY(-2px);
 }
 
-/* ============ TRANSLATOR STYLES ============ */
+/* ============ VOICE TRANSLATOR STYLES ============ */
 #translatorSection {
-    background: linear-gradient(135deg, #000 0%, #111 50%, #000 100%);
+    background: linear-gradient(135deg, #000 0%, #0a0a0a 50%, #000 100%);
     position: relative;
     overflow: hidden;
 }
@@ -1064,32 +1064,68 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 50% 30%, rgba(0, 212, 170, 0.03) 0%, transparent 70%);
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(0, 212, 170, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(0, 184, 148, 0.03) 0%, transparent 50%);
     z-index: 0;
 }
 
-.translator-layout {
+.voice-translator-layout {
     height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
     z-index: 1;
     overflow-y: auto;
-    padding-top: 0;
 }
 
-.translator-header {
+.voice-translator-header {
     text-align: center;
     padding: 40px 24px 30px;
     position: relative;
     z-index: 1;
-    background: linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, transparent 100%);
-    border-radius: 0 0 40px 40px;
-    margin-bottom: 20px;
     flex-shrink: 0;
 }
 
-.translator-header h2 {
+.translator-logo {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.logo-pulse {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 32px;
+    box-shadow: 
+        0 0 30px rgba(0, 212, 170, 0.4),
+        0 0 60px rgba(0, 212, 170, 0.2);
+    animation: logoPulse 2s ease-in-out infinite;
+    position: relative;
+}
+
+@keyframes logoPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+            0 0 30px rgba(0, 212, 170, 0.4),
+            0 0 60px rgba(0, 212, 170, 0.2);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 
+            0 0 40px rgba(0, 212, 170, 0.6),
+            0 0 80px rgba(0, 212, 170, 0.3);
+    }
+}
+
+.voice-translator-header h2 {
     font-size: 36px;
     font-weight: 900;
     color: #fff;
@@ -1101,14 +1137,14 @@ body {
     background-clip: text;
 }
 
-.translator-header p {
+.voice-translator-header p {
     color: rgba(255, 255, 255, 0.7);
     font-size: 18px;
     font-weight: 400;
     letter-spacing: 0.3px;
 }
 
-.translator-content {
+.voice-translator-content {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1117,360 +1153,487 @@ body {
     position: relative;
     z-index: 1;
     overflow-y: auto;
-    max-height: calc(100vh - 200px);
 }
 
-.language-selector {
+/* Voice Language Selector */
+.voice-language-selector {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 24px;
-    margin-bottom: 32px;
-    background: rgba(255, 255, 255, 0.08);
+    gap: 20px;
+    margin-bottom: 40px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(20px);
     border-radius: 24px;
-    padding: 32px 28px;
     box-shadow: 
         0 20px 40px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    position: relative;
-    overflow: hidden;
 }
 
-.language-selector::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 170, 0.5) 50%, transparent 100%);
-}
-
-.language-option {
+.language-card {
     flex: 1;
-    max-width: 220px;
-    position: relative;
+    max-width: 200px;
+    text-align: center;
 }
 
-.language-option::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 11px;
+.language-label {
+    font-size: 12px;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-align: center;
 }
 
-.language-option .language-select {
+.voice-language-select {
     width: 100%;
-    padding: 20px 24px;
+    padding: 16px 20px;
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.05);
     color: #fff;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 16 16'%3e%3cpath d='m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 20px center;
-    background-size: 16px;
-    padding-right: 50px;
     text-align: center;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
 }
 
-.language-option .language-select:hover {
+.voice-language-select:hover {
     border-color: rgba(0, 212, 170, 0.5);
     background: rgba(0, 212, 170, 0.1);
-    transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(0, 212, 170, 0.2);
+    transform: translateY(-2px);
 }
 
-.language-option .language-select:focus {
+.voice-language-select:focus {
     border-color: #00d4aa;
     outline: none;
-    box-shadow: 0 0 0 4px rgba(0, 212, 170, 0.2);
-    background: rgba(0, 212, 170, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.2);
 }
 
-.language-option .language-select option {
+.voice-language-select option {
     background: #111;
     color: #fff;
-    padding: 16px;
-    font-weight: 600;
+    padding: 12px;
 }
 
-.swap-languages {
-    width: 68px;
-    height: 68px;
+.voice-swap-btn {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
-    border: 4px solid rgba(255, 255, 255, 0.1);
+    border: none;
     color: #000;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    transition: all 0.4s ease;
+    box-shadow: 0 10px 25px rgba(0, 212, 170, 0.3);
+    flex-shrink: 0;
+}
+
+.voice-swap-btn:hover {
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 15px 35px rgba(0, 212, 170, 0.4);
+}
+
+.swap-icon {
+    font-size: 20px;
     font-weight: 900;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Voice Recording Area */
+.voice-recording-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    margin-bottom: 32px;
+}
+
+.recording-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+}
+
+.recording-visual {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 212, 170, 0.1) 0%, rgba(0, 212, 170, 0.05) 50%, transparent 100%);
+    border: 2px solid rgba(0, 212, 170, 0.2);
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.recording-visual.active {
+    opacity: 1;
+    border-color: #00d4aa;
     box-shadow: 
-        0 12px 30px rgba(0, 212, 170, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 0 40px rgba(0, 212, 170, 0.3),
+        inset 0 0 40px rgba(0, 212, 170, 0.1);
+    animation: recordingPulse 2s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+            0 0 40px rgba(0, 212, 170, 0.3),
+            inset 0 0 40px rgba(0, 212, 170, 0.1);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 
+            0 0 60px rgba(0, 212, 170, 0.5),
+            inset 0 0 60px rgba(0, 212, 170, 0.2);
+    }
+}
+
+.audio-waves {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.audio-waves.active {
+    opacity: 1;
+}
+
+.wave {
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(to top, #00d4aa, #00b894);
+    border-radius: 2px;
+    animation: wave 1.5s ease-in-out infinite;
+}
+
+.wave:nth-child(2) { animation-delay: 0.1s; }
+.wave:nth-child(3) { animation-delay: 0.2s; }
+.wave:nth-child(4) { animation-delay: 0.3s; }
+.wave:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes wave {
+    0%, 100% { height: 20px; }
+    50% { height: 60px; }
+}
+
+.voice-record-main-btn {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    border: none;
+    color: #000;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 20px 40px rgba(0, 212, 170, 0.4),
+        inset 0 2px 0 rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: hidden;
 }
 
-.swap-languages::before {
+.voice-record-main-btn::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
-.swap-languages:hover::before {
+.voice-record-main-btn:hover::before {
     opacity: 1;
 }
 
-.swap-languages:hover {
-    transform: rotate(180deg) scale(1.15);
+.voice-record-main-btn:hover {
+    transform: scale(1.05);
     box-shadow: 
-        0 16px 40px rgba(0, 212, 170, 0.5),
-        0 0 20px rgba(0, 212, 170, 0.3);
-    border-color: rgba(255, 255, 255, 0.2);
+        0 25px 50px rgba(0, 212, 170, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
-.swap-languages:active {
-    transform: rotate(180deg) scale(1.05);
+.voice-record-main-btn.recording {
+    background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+    animation: recordingButton 1s ease-in-out infinite;
 }
 
-.translate-boxes {
+@keyframes recordingButton {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+.mic-icon {
+    font-size: 32px;
+    font-weight: 900;
+}
+
+.record-text {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.recording-status {
+    text-align: center;
     display: flex;
-    gap: 24px;
-    flex: 1;
-    min-height: 450px;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
 
-.translate-box {
-    flex: 1;
+.status-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #666;
+    transition: all 0.3s ease;
+}
+
+.status-indicator.recording {
+    background: #ff4757;
+    animation: statusPulse 1s ease-in-out infinite;
+}
+
+.status-indicator.processing {
+    background: #ffa502;
+    animation: statusPulse 0.8s ease-in-out infinite;
+}
+
+.status-indicator.ready {
+    background: #00d4aa;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* Translation Display */
+.translation-display {
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(20px);
     border-radius: 24px;
-    padding: 28px;
+    padding: 32px;
     box-shadow: 
         0 20px 40px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    display: flex;
-    flex-direction: column;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 32px;
 }
 
-.translate-box::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #00d4aa 0%, #00b894 100%);
-    border-radius: 24px 24px 0 0;
-}
-
-.translate-box:hover {
-    transform: translateY(-6px);
-    box-shadow: 
-        0 25px 50px rgba(0, 0, 0, 0.4),
-        0 0 30px rgba(0, 212, 170, 0.1);
-    border-color: rgba(0, 212, 170, 0.2);
-}
-
-.translate-box.result::before {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-}
-
-.translate-box.result:hover {
-    box-shadow: 
-        0 25px 50px rgba(0, 0, 0, 0.4),
-        0 0 30px rgba(102, 126, 234, 0.1);
-}
-
-.translate-actions {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 24px;
-    justify-content: flex-start;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.voice-translate-btn, .paste-btn, .speak-btn, .copy-btn {
-    width: 52px;
-    height: 52px;
+.translation-card {
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    border: none;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.translation-card:last-child {
+    margin-bottom: 0;
+}
+
+.translation-card:hover {
     background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    border-color: rgba(0, 212, 170, 0.3);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.text-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.play-original-btn, .play-translation-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 212, 170, 0.2);
+    color: #00d4aa;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.play-original-btn:hover, .play-translation-btn:hover {
+    background: rgba(0, 212, 170, 0.3);
+    transform: scale(1.1);
+}
+
+.text-content {
+    color: #fff;
     font-size: 18px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    position: relative;
-    overflow: hidden;
+    line-height: 1.6;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.translated-text .text-content {
+    color: #00d4aa;
+    font-weight: 500;
+}
+
+.translation-arrow {
+    text-align: center;
+    margin: 16px 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 24px;
+}
+
+/* Translation Actions */
+.translation-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 16px;
+    padding: 20px 24px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 80px;
 }
 
-.voice-translate-btn::before, .paste-btn::before, .speak-btn::before, .copy-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2) 0%, rgba(0, 184, 148, 0.1) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    border-radius: 16px;
-}
-
-.voice-translate-btn:hover::before, .paste-btn:hover::before, .speak-btn:hover::before, .copy-btn:hover::before {
-    opacity: 1;
-}
-
-.voice-translate-btn:hover, .paste-btn:hover, .speak-btn:hover, .copy-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0, 212, 170, 0.2);
+.action-btn:hover {
+    background: rgba(0, 212, 170, 0.15);
     color: #00d4aa;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 212, 170, 0.2);
     border-color: rgba(0, 212, 170, 0.3);
 }
 
-.voice-translate-btn:active, .paste-btn:active, .speak-btn:active, .copy-btn:active {
-    transform: translateY(0);
+.action-btn i {
+    font-size: 20px;
+    margin-bottom: 4px;
 }
 
-.translate-input, .translate-output {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: rgba(255, 255, 255, 0.05);
-    font-size: 17px;
-    line-height: 1.7;
-    resize: none;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    min-height: 280px;
-    color: #fff;
-    font-weight: 400;
-    letter-spacing: 0.3px;
-    border-radius: 12px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+.action-btn span {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.translate-input:focus, .translate-output:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(0, 212, 170, 0.5);
-    box-shadow: 
-        inset 0 2px 8px rgba(0, 0, 0, 0.3),
-        0 0 0 2px rgba(0, 212, 170, 0.2);
-}
-
-.translate-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-    font-style: italic;
-    font-weight: 300;
-}
-
-.translate-output::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-    font-style: italic;
-    font-weight: 300;
-}
-
-.translate-output {
-    color: #fff;
-    background: rgba(0, 212, 170, 0.08);
-    border-color: rgba(0, 212, 170, 0.2);
-}
-
-/* Responsive design for translator */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .translate-boxes {
+    .voice-language-selector {
         flex-direction: column;
-        gap: 20px;
-        min-height: auto;
+        gap: 16px;
+        padding: 20px;
     }
     
-    .language-selector {
-        flex-direction: column;
-        gap: 20px;
-        padding: 24px 20px;
-    }
-    
-    .language-option {
+    .language-card {
         max-width: 100%;
         width: 100%;
     }
     
-    .swap-languages {
+    .voice-swap-btn {
         order: 1;
         transform: rotate(90deg);
-        width: 60px;
-        height: 60px;
-        font-size: 20px;
+        width: 50px;
+        height: 50px;
     }
     
-    .swap-languages:hover {
+    .voice-swap-btn:hover {
         transform: rotate(270deg) scale(1.1);
     }
     
-    .translator-header {
-        padding: 40px 20px 30px;
+    .voice-translator-header h2 {
+        font-size: 28px;
     }
     
-    .translator-header h2 {
-        font-size: 30px;
+    .recording-visual {
+        width: 150px;
+        height: 150px;
     }
     
-    .translate-input, .translate-output {
-        min-height: 220px;
-        font-size: 16px;
+    .voice-record-main-btn {
+        width: 100px;
+        height: 100px;
     }
     
-    .translate-box {
+    .mic-icon {
+        font-size: 28px;
+    }
+    
+    .translation-actions {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    
+    .action-btn {
+        min-width: 70px;
+        padding: 16px 20px;
+    }
+    
+    .translation-display {
+        padding: 24px;
+    }
+    
+    .translation-card {
         padding: 20px;
-    }
-    
-    .translate-actions {
-        gap: 12px;
-    }
-    
-    .voice-translate-btn, .paste-btn, .speak-btn, .copy-btn {
-        width: 46px;
-        height: 46px;
-        font-size: 16px;
     }
 }
 
