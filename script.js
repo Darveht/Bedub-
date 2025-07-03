@@ -366,7 +366,7 @@ class EZTranslateApp {
             const lastMessage = messages[messages.length - 1];
             
             const chatItem = document.createElement('div');
-            chatItem.className = 'chat-item';
+            chatItem.className = `chat-item ${this.currentChat === phone ? 'active' : ''}`;
             chatItem.onclick = () => this.openChat(phone);
             
             chatItem.innerHTML = `
@@ -398,11 +398,19 @@ class EZTranslateApp {
         const chatSidebar = document.querySelector('.chat-sidebar');
         const noChat = document.querySelector('.no-chat-selected');
         const activeChat = document.getElementById('activeChat');
+        const bottomNav = document.querySelector('.bottom-nav');
         
         // Hide sidebar and show chat
         chatSidebar.classList.add('chat-open');
         chatMain.classList.remove('show-placeholder');
         chatMain.classList.add('active');
+        
+        // Hide bottom navigation when chat is active
+        if (bottomNav) {
+            bottomNav.style.transform = 'translateY(100%)';
+            bottomNav.style.visibility = 'hidden';
+            bottomNav.style.opacity = '0';
+        }
         
         // Hide placeholder completely and show active chat
         if (noChat) {
@@ -417,6 +425,11 @@ class EZTranslateApp {
         // Update chat header
         document.getElementById('contactName').textContent = contact.name;
         document.getElementById('contactLanguage').textContent = this.getLanguageDisplay(contact.language);
+        
+        // Update active chat item styling
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.classList.remove('active');
+        });
         
         this.renderMessages();
     }
@@ -909,6 +922,7 @@ class EZTranslateApp {
         const chatSidebar = document.querySelector('.chat-sidebar');
         const noChat = document.querySelector('.no-chat-selected');
         const activeChat = document.getElementById('activeChat');
+        const bottomNav = document.querySelector('.bottom-nav');
         
         // Clear current chat first
         this.currentChat = null;
@@ -917,11 +931,23 @@ class EZTranslateApp {
         chatSidebar.classList.remove('chat-open');
         chatMain.classList.remove('active');
         
+        // Show bottom navigation again
+        if (bottomNav) {
+            bottomNav.style.transform = 'translateY(0)';
+            bottomNav.style.visibility = 'visible';
+            bottomNav.style.opacity = '1';
+        }
+        
         // Hide active chat
         if (activeChat) {
             activeChat.classList.add('hidden');
             activeChat.style.display = 'none';
         }
+        
+        // Remove active styling from chat items
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.classList.remove('active');
+        });
         
         // Show placeholder only if no contacts exist
         if (this.contacts.size === 0) {
